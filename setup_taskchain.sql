@@ -1,0 +1,3 @@
+-- Run this file in the same PostgreSQL database used by SecuritySys.
+-- It simply reuses the complete schema in schema.sql.
+-- In pgAdmin/psql, open schema.sql and execute it, then use lab_setup.py to seed the admin account.

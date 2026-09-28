@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in — TaskChain</title>
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+  <a href="#loginForm" class="skip-link">Skip to sign in form</a>
+  <main class="auth">
+    <!-- Brand & Hero Section -->
+    <section class="auth-copy">
+      <div class="brand">
+        <div class="brand-mark">TC</div>
+        <strong>TaskChain</strong>
+      </div>
+
+      <div class="hero">
+        <p class="eyebrow">Integrated task coordination</p>
+        <h1>Keep every task moving, with every handover accounted for.</h1>
+        <p>From request to completion, TaskChain connects people, responsibilities, evidence, and verification in one secure workspace.</p>
+        
+        <div class="chain">
+          <span>Request</span><i>→</i>
+          <span>Assign</span><i>→</i>
+          <span>Handover</span><i>→</i>
+          <span>Verify</span><i>→</i>
+          <b>Complete</b>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sign-In Form Section -->
+    <section class="auth-card">
+      <div class="card-head">
+        <p class="eyebrow">Secure workspace</p>
+        <h2>Welcome back</h2>
+        <p>Sign in to continue where your task chain left off.</p>
+      </div>
+
+      <div id="error" class="alert" role="alert" aria-live="polite"></div>
+
+      <form id="loginForm">
+        <label for="email">
+          Email
+          <input id="email" type="email" autocomplete="username" placeholder="you@example.com" required>
+        </label>
+
+        <label for="password">
+          Password
+          <div class="password">
+            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+            <button type="button" id="show">Show</button>
+          </div>
+        </label>
+
+        <div class="form-row">
+          <label class="check">
+            <input type="checkbox"> Remember me
+          </label>
+          <button type="button" class="link" id="forgot">Forgot password?</button>
+        </div>
+
+        <button type="submit" class="primary" id="submit">Sign in</button>
+      </form>
+
+      <p class="switch">Don't have an account? <a href="register.html">Create one</a></p>
+    </section>
+  </main>
+
+  <script>
+    const errorAlert = document.getElementById('error');
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const togglePassBtn = document.getElementById('show');
+    const forgotBtn = document.getElementById('forgot');
+    const submitBtn = document.getElementById('submit');
+
+    // Prefill form if coming from registration redirect
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('registered')) {
+      errorAlert.textContent = 'Account created. Sign in to continue.';
+      errorAlert.classList.add('show', 'success');
+      emailInput.value = params.get('email') || '';
+    }
+
+    // Toggle password visibility
+    togglePassBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      togglePassBtn.textContent = isPassword ? 'Hide' : 'Show';
+    });
+
+    // Alert helper for forgot password link
+    forgotBtn.addEventListener('click', () => {
+      errorAlert.textContent = 'For this local build, contact an administrator to reset your password.';
+      errorAlert.className = 'alert show shake';
+      setTimeout(() => errorAlert.classList.remove('shake'), 500);
+    });
+
+    // Ripple tracker for primary button
+    submitBtn.addEventListener('mousemove', (e) => {
+      const rect = submitBtn.getBoundingClientRect();
+      submitBtn.style.setProperty('--rx', `${e.clientX - rect.left}px`);
+      submitBtn.style.setProperty('--ry', `${e.clientY - rect.top}px`);
+    });
+
+    // Form submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorAlert.className = 'alert';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in…';
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: emailInput.value,
+            password: passwordInput.value
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          errorAlert.textContent = data.error || 'Sign in failed.';
+          errorAlert.className = 'alert show shake';
+          setTimeout(() => errorAlert.classList.remove('shake'), 500);
+          return;
+        }
+
+        window.location.href = '/dashboard.html';
+      } catch (err) {
+        errorAlert.textContent = 'Could not reach the server. Is Flask running?';
+        errorAlert.className = 'alert show shake';
+        setTimeout(() => errorAlert.classList.remove('shake'), 500);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign in';
+      }
+    });
+  </script>
+</body>
+</html>

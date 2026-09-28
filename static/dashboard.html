@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — TaskChain</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <!-- Skip link for keyboard navigation -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Global Toast Notification -->
+  <div id="toast" class="toast" role="alert" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="app-shell">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">TC</div>
+        <div>
+          <strong>TaskChain</strong>
+          <span>Connected work, verified.</span>
+        </div>
+      </div>
+
+      <!-- Navigation links injected dynamically by app.js -->
+      <nav id="nav" aria-label="Main Navigation"></nav>
+
+      <!-- User Profile & Logout -->
+      <div class="sidebar-bottom">
+        <div class="mini-user">
+          <div class="avatar" id="avatar" aria-hidden="true">U</div>
+          <div>
+            <strong id="sideName">User</strong>
+            <span id="sideRole">Role</span>
+          </div>
+        </div>
+
+        <button class="ghost full" id="logoutBtn" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <!-- SVG Logout Icon -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main" id="main-content">
+
+      <!-- Top Header Bar -->
+      <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <!-- Mobile Menu Toggle -->
+          <button class="icon-btn mobile-only" id="menuBtn" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">
+            <!-- SVG Hamburger Menu Icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+
+          <!-- Dynamic Page Title -->
+          <div>
+            <div class="eyebrow" id="pageEyebrow">Workspace</div>
+            <h1 id="pageTitle">Dashboard</h1>
+          </div>
+        </div>
+
+        <!-- Top Actions (Notifications & Profile) -->
+        <div class="top-actions">
+
+          <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Notifications">
+            <!-- SVG Bell Icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="dot" id="notifDot" aria-hidden="true"></span>
+            <span class="visually-hidden" id="notifCount">0 new notifications</span>
+          </button>
+
+          <div class="user-chip" role="button" tabindex="0" aria-label="User profile options" aria-haspopup="true" aria-expanded="false">
+            <div class="avatar small" id="topAvatar" aria-hidden="true">U</div>
+            <span id="topName">User</span>
+            <!-- SVG Dropdown Chevron -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #8a96a5;" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+
+        </div>
+      </header>
+
+      <!-- Dynamic Page Content Container -->
+      <section class="content" id="content" aria-live="polite">
+        <!-- Dashboard components injected by app.js will appear here -->
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
