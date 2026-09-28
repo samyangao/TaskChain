@@ -19,7 +19,12 @@ parser.add_argument("--password", required=True, help="Lab password from the Act
 args = parser.parse_args()
 
 password = args.password
-common = {"1234","12345","123456","12345678","password","password123","admin","admin123","admin1234","qwerty","welcome","student","student123, maria1234"}
+LAB_EMAIL = "maria@gmail.com"
+common = {
+    "1234","12345","123456","12345678","password","password123",
+    "admin","admin123","admin1234","qwerty","welcome",
+    "student","student123","maria1234",
+}
 if not (password in common or (password.isdigit() and len(password)==5 and 0 <= int(password) <= 5000)):
     raise SystemExit("Password must be one of the Activity 2 candidates (common list or 00000-05000).")
 
@@ -33,17 +38,17 @@ conn = psycopg.connect(
 pw_hash=bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
 try:
     with conn, conn.cursor() as cur:
-        cur.execute("SELECT id FROM users WHERE email=%s", ("maria@gmail.com",))
+        cur.execute("SELECT id FROM users WHERE email=%s", (LAB_EMAIL,))
         row=cur.fetchone()
         if row:
             cur.execute("""UPDATE users SET password_hash=%s, role='administrator', is_active=TRUE,
                            failed_login_attempts=0, locked_until=NULL WHERE email=%s""",
-                        (pw_hash,"maria@gmail.com"))
+                        (pw_hash,LAB_EMAIL))
         else:
             cur.execute("""INSERT INTO users(full_name,email,password_hash,role)
                            VALUES(%s,%s,%s,%s)""",
-                        ("Admin 12","testuser@gmail.com",pw_hash,"administrator"))
-    print("Lab account ready: maria@gmail.com")
+                        ("Admin 12",LAB_EMAIL,pw_hash,"administrator"))
+    print("Lab account ready: "+LAB_EMAIL)
     print("Password:", password)
 finally:
     conn.close()

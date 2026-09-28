@@ -1,4 +1,15 @@
 .env
+.venv/
 venv/
+env/
 __pycache__/
 *.pyc
+*.pyo
+*.log
+.pytest_cache/
+.idea/
+.vscode/
+
+# Uploaded task evidence is runtime data, never source.
+uploads/*
+!uploads/.gitkeep

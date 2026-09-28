@@ -1,5 +1,7 @@
 import os
 import re
+import time
+from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from uuid import UUID
@@ -8,28 +10,65 @@ import bcrypt
 import psycopg
 from psycopg.rows import dict_row
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request, session, send_from_directory, send_file
+from flask import Flask, jsonify, request, session, send_from_directory
 from werkzeug.utils import secure_filename
 
 load_dotenv()
 
 app = Flask(__name__, static_folder="static", static_url_path="")
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "change-this-secret-key")
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+_UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(_UPLOAD_DIR, exist_ok=True)
+
+# ---------- Session secret ----------
+# Fail fast rather than silently falling back to a publicly known key.
+# A leaked or missing secret lets an attacker mint arbitrary session cookies.
+_secret = os.environ.get("FLASK_SECRET_KEY", "").strip()
+_PLACEHOLDERS = {"change-this-secret-key", "replace_with_a_long_random_secret", "secret", "changeme"}
+if len(_secret) < 32 or _secret.lower() in _PLACEHOLDERS:
+    raise RuntimeError(
+        "FLASK_SECRET_KEY is missing, a placeholder, or shorter than 32 characters.\n"
+        "Generate one with:  python -c \"import secrets; print(secrets.token_hex(32))\"\n"
+        "Then set FLASK_SECRET_KEY in your .env file (see .env.example)."
+    )
+app.secret_key = _secret
+UPLOAD_DIR = _UPLOAD_DIR
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE", "0") == "1",
     MAX_CONTENT_LENGTH=8 * 1024 * 1024,
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=120),
+    SESSION_REFRESH_EACH_REQUEST=True,
 )
+
+# The unprotected Activity 2 laboratory is opt-in and off by default.
+LAB_ENABLED = os.environ.get("ENABLE_LAB", "0") == "1"
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_MINUTES = 5
+IP_MAX_ATTEMPTS = 20
+IP_WINDOW_SECONDS = 300
 ALLOWED_ROLES = {"requester", "coordinator", "personnel", "verifier", "administrator"}
 TASK_STATUSES = {"submitted", "under_review", "assigned", "accepted", "in_progress", "waiting", "handover", "for_verification", "verified", "completed", "rejected", "cancelled", "overdue"}
+# Without this map any participant could PATCH their way to "completed" and
+# skip the verification step entirely.
+ALLOWED_TRANSITIONS = {
+    "submitted":        {"under_review", "cancelled"},
+    "under_review":     {"assigned", "cancelled"},
+    "assigned":         {"accepted", "handover", "cancelled"},
+    "accepted":         {"in_progress", "waiting", "handover", "cancelled"},
+    "in_progress":      {"waiting", "handover", "for_verification", "cancelled"},
+    "waiting":          {"in_progress", "handover", "cancelled"},
+    "handover":         {"accepted", "in_progress", "cancelled"},
+    "for_verification": {"completed", "rejected", "cancelled"},
+    "verified":         {"completed"},
+    "rejected":         {"in_progress", "cancelled"},
+    "overdue":          {"in_progress", "handover", "cancelled"},
+    "completed":        set(),
+    "cancelled":        set(),
+}
 PRIORITIES = {"low", "medium", "high", "urgent"}
 
 
@@ -48,13 +87,87 @@ def json_error(message, status=400):
     return jsonify(error=message), status
 
 
+# ---------- Error handling ----------
+# Database and HTTP errors must never leak driver messages or stack traces.
+@app.errorhandler(psycopg.Error)
+def handle_db_error(exc):
+    app.logger.exception("Database error: %s", type(exc).__name__)
+    return json_error("A database error occurred. Please try again.", 500)
+
+
+@app.errorhandler(psycopg.errors.InvalidTextRepresentation)
+def handle_bad_uuid(exc):
+    return json_error("Invalid identifier format.", 400)
+
+
+@app.errorhandler(404)
+def handle_404(exc):
+    if request.path.startswith("/api/") or request.path == "/api":
+        return json_error("Not found.", 404)
+    return json_error("Page not found.", 404)
+
+
+@app.errorhandler(413)
+def handle_413(exc):
+    return json_error("That file is too large (8 MB maximum).", 413)
+
+
+@app.errorhandler(Exception)
+def handle_unexpected(exc):
+    from werkzeug.exceptions import HTTPException
+    if isinstance(exc, HTTPException):
+        return json_error(exc.description or exc.name, exc.code or 500)
+    app.logger.exception("Unhandled application error")
+    return json_error("Something went wrong on the server.", 500)
+
+
+# ---------- Helpers ----------
+def parse_uuid(value):
+    """Return a UUID, or None when the value is not a well-formed identifier."""
+    try:
+        return UUID(str(value))
+    except (ValueError, AttributeError, TypeError):
+        return None
+
+
+def client_ip():
+    return request.remote_addr or "unknown"
+
+
+_ip_hits = defaultdict(deque)
+
+
+def ip_throttled(key="default", limit=IP_MAX_ATTEMPTS, window=IP_WINDOW_SECONDS):
+    """Simple in-process sliding-window throttle that also prunes stale entries."""
+    now = time.monotonic()
+    bucket = _ip_hits[(key, client_ip())]
+    while bucket and now - bucket[0] > window:
+        bucket.popleft()
+    if len(bucket) >= limit:
+        return int(window - (now - bucket[0])) + 1
+    bucket.append(now)
+    if len(_ip_hits) > 4096:  # bound memory if the key space grows
+        for stale in [k for k, v in _ip_hits.items() if not v or now - v[-1] > window]:
+            del _ip_hits[stale]
+    return 0
+
+
+def is_manager(user):
+    return user["role"] in {"administrator", "coordinator"}
+
+
+def can_view_task(user, task):
+    """Managers see everything; everyone else only their own tasks."""
+    if is_manager(user):
+        return True
+    return user["id"] in {task["created_by"], task["assigned_to"]}
+
+
 def current_user():
     uid = session.get("user_id")
     if not uid:
         return None
-    try:
-        UUID(uid)
-    except ValueError:
+    if not parse_uuid(uid):
         session.clear()
         return None
     with db() as conn, conn.cursor() as cur:
@@ -112,7 +225,23 @@ def root():
 @app.get("/uploads/<path:filename>")
 @login_required
 def uploaded_file(user, filename):
-    return send_from_directory(UPLOAD_DIR, filename)
+    # Authorisation, not just authentication: the caller must be able to see a
+    # task that this evidence belongs to, otherwise any logged-in user could
+    # download every other user's uploaded documents by name.
+    stored = os.path.basename(filename)
+    with db() as conn, conn.cursor() as cur:
+        cur.execute(
+            """SELECT t.created_by, t.assigned_to
+               FROM task_evidence e JOIN tasks t ON t.id = e.task_id
+               WHERE e.file_url = %s""",
+            (f"/uploads/{stored}",),
+        )
+        owners = cur.fetchall()
+    if not owners:
+        return json_error("File not found.", 404)
+    if not is_manager(user) and not any(user["id"] in {o["created_by"], o["assigned_to"]} for o in owners):
+        return json_error("You do not have access to this file.", 403)
+    return send_from_directory(UPLOAD_DIR, stored)
 
 
 @app.get("/<path:page>")
@@ -130,6 +259,9 @@ def page(page):
 # ---------- Authentication ----------
 @app.post("/api/register")
 def register():
+    retry_after = ip_throttled("register")
+    if retry_after:
+        return jsonify(error="Too many registration attempts. Please try again later.", retryAfterSeconds=retry_after), 429
     data = request.get_json(silent=True) or {}
     full_name = (data.get("fullName") or "").strip()
     email = (data.get("email") or "").strip().lower()
@@ -161,25 +293,37 @@ def register():
 
 @app.post("/api/login")
 def login():
+    # Per-IP throttle. Combined with the per-account lockout below this stops
+    # both distributed spraying and trivial "lock a victim out" denial of service.
+    retry_after = ip_throttled("login")
+    if retry_after:
+        return jsonify(
+            error="Too many login attempts from this address. Please try again later.",
+            retryAfterSeconds=retry_after,
+        ), 429
+
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
     if not email or not password:
         return json_error("Enter both an email and a password.")
 
+    # A single generic message and payload for every failure mode. Returning
+    # attemptsLeft / lockedUntil only for real accounts would let an attacker
+    # enumerate which email addresses are registered.
+    generic = "That email and password combination didn't work."
+
     with db() as conn, conn.cursor() as cur:
         cur.execute("SELECT id,full_name,email,password_hash,failed_login_attempts,locked_until,is_active,role FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
-        generic = "That email and password combination didn't work."
         if not user or not user["is_active"]:
-            cur.execute("INSERT INTO login_attempts(email,success,ip_address) VALUES(%s,%s,%s)", (email,False,request.remote_addr))
+            cur.execute("INSERT INTO login_attempts(email,success,ip_address) VALUES(%s,%s,%s)", (email,False,client_ip()))
             return json_error(generic, 401)
         now = datetime.now(timezone.utc)
         if user["locked_until"] and user["locked_until"] > now:
             remaining_seconds = max(1, int((user["locked_until"] - now).total_seconds()))
             return jsonify(
-                error="Too many failed attempts. This account is locked for 5 minutes.",
-                lockedUntil=user["locked_until"].isoformat(),
+                error="Too many failed attempts. This account is temporarily locked.",
                 retryAfterSeconds=remaining_seconds,
             ), 429
         if user["locked_until"]:
@@ -192,18 +336,15 @@ def login():
             attempts = user["failed_login_attempts"] + 1
             locked = now + timedelta(minutes=LOCKOUT_MINUTES) if attempts >= MAX_FAILED_ATTEMPTS else None
             cur.execute("UPDATE users SET failed_login_attempts=%s,locked_until=%s WHERE id=%s", (attempts,locked,user["id"]))
-            cur.execute("INSERT INTO login_attempts(email,success,ip_address) VALUES(%s,%s,%s)", (email,False,request.remote_addr))
+            cur.execute("INSERT INTO login_attempts(email,success,ip_address) VALUES(%s,%s,%s)", (email,False,client_ip()))
             if locked:
                 return jsonify(
-                    error="Too many failed attempts. This account is locked for 5 minutes.",
-                    attemptsLeft=0,
-                    lockedUntil=locked.isoformat(),
+                    error="Too many failed attempts. This account is temporarily locked.",
                     retryAfterSeconds=LOCKOUT_MINUTES * 60,
                 ), 429
-            attempts_left = MAX_FAILED_ATTEMPTS - attempts
-            return jsonify(error=generic, attemptsLeft=attempts_left), 401
+            return json_error(generic, 401)
         cur.execute("UPDATE users SET failed_login_attempts=0,locked_until=NULL,last_login_at=now() WHERE id=%s", (user["id"],))
-        cur.execute("INSERT INTO login_attempts(email,success,ip_address) VALUES(%s,%s,%s)", (email,True,request.remote_addr))
+        cur.execute("INSERT INTO login_attempts(email,success,ip_address) VALUES(%s,%s,%s)", (email,True,client_ip()))
         audit(cur, user["id"], "login_success", "user", user["id"], "Successful login")
         session.clear()
         session["user_id"] = str(user["id"])
@@ -213,8 +354,11 @@ def login():
 @app.post("/api/lab-login")
 def lab_login():
     # This endpoint exists ONLY for the Activity 2 localhost laboratory.
-    # It intentionally has NO rate limiting or account lockout.
-    
+    # It intentionally has NO rate limiting or account lockout, which is the
+    # point of the exercise, so it must stay OFF unless it is deliberately
+    # switched on. Set ENABLE_LAB=1 in .env for the lab session.
+    if not LAB_ENABLED:
+        return json_error("Unprotected lab is disabled. Set ENABLE_LAB=1 to run the Activity 2 lab.", 403)
     if request.remote_addr not in {"127.0.0.1", "::1"}:
         return json_error("Unprotected lab is restricted to localhost.", 403)
 
@@ -330,11 +474,27 @@ def update_user(user, user_id):
     active = data.get("isActive")
     if not isinstance(active, bool):
         return json_error("isActive must be true or false.")
+
+    target_id = parse_uuid(user_id)
+    if not target_id:
+        return json_error("Invalid user id.", 400)
+    # Never allow an administrator to demote or deactivate their own account,
+    # which would leave the system with no way back in.
+    if target_id == user["id"]:
+        return json_error("You cannot change your own role or activation status.", 400)
+
     with db() as conn, conn.cursor() as cur:
-        cur.execute("SELECT id FROM users WHERE id=%s", (user_id,))
-        if not cur.fetchone(): return json_error("User not found.",404)
-        cur.execute("UPDATE users SET role=%s,is_active=%s WHERE id=%s", (role,active,user_id))
-        audit(cur,user["id"],"user_updated","user",user_id,f"role={role}; active={active}")
+        cur.execute("SELECT id,role,is_active FROM users WHERE id=%s", (target_id,))
+        target = cur.fetchone()
+        if not target:
+            return json_error("User not found.",404)
+        # Refuse to remove the last active administrator account.
+        if target["role"] == "administrator" and (role != "administrator" or not active):
+            cur.execute("SELECT count(*) AS n FROM users WHERE role='administrator' AND is_active=TRUE")
+            if cur.fetchone()["n"] <= 1:
+                return json_error("At least one active administrator must remain.", 409)
+        cur.execute("UPDATE users SET role=%s,is_active=%s WHERE id=%s", (role,active,target_id))
+        audit(cur,user["id"],"user_updated","user",str(target_id),f"role={role}; active={active}")
     return jsonify(message="User updated.")
 
 
@@ -397,10 +557,12 @@ def create_task(user):
 @app.get("/api/tasks/<task_id>")
 @login_required
 def get_task(user, task_id):
+    if not parse_uuid(task_id):
+        return json_error("Invalid task id.", 400)
     with db() as conn, conn.cursor() as cur:
         cur.execute(TASK_SELECT + " WHERE t.id=%s", (task_id,)); task=cur.fetchone()
         if not task: return json_error("Task not found.",404)
-        if user["role"] not in {"administrator","coordinator"} and user["id"] not in {task["created_by"],task["assigned_to"]}: return json_error("You do not have access to this task.",403)
+        if not can_view_task(user, task): return json_error("You do not have access to this task.",403)
         cur.execute("SELECT h.*, f.full_name AS from_name, t.full_name AS to_name FROM task_handovers h JOIN users f ON f.id=h.from_user_id JOIN users t ON t.id=h.to_user_id WHERE h.task_id=%s ORDER BY h.created_at", (task_id,)); handovers=cur.fetchall()
         cur.execute("SELECT e.*,u.full_name AS uploader FROM task_evidence e JOIN users u ON u.id=e.uploaded_by WHERE e.task_id=%s ORDER BY e.created_at DESC", (task_id,)); evidence=cur.fetchall()
         cur.execute("SELECT v.*,u.full_name AS verifier_name FROM task_verifications v JOIN users u ON u.id=v.verifier_id WHERE v.task_id=%s ORDER BY v.created_at DESC", (task_id,)); verifications=cur.fetchall()
@@ -420,6 +582,8 @@ def get_task(user, task_id):
 @app.patch("/api/tasks/<task_id>")
 @login_required
 def update_task(user, task_id):
+    if not parse_uuid(task_id):
+        return json_error("Invalid task id.", 400)
     data=request.get_json(silent=True) or {}
     with db() as conn, conn.cursor() as cur:
         cur.execute("SELECT id,task_code,status,assigned_to,created_by FROM tasks WHERE id=%s",(task_id,)); task=cur.fetchone()
@@ -431,8 +595,18 @@ def update_task(user, task_id):
         if "category" in data: allowed_fields["category"]=(data["category"] or "General").strip()
         if "description" in data: allowed_fields["description"]=(data["description"] or "").strip()
         if not allowed_fields: return json_error("No valid changes supplied.")
-        is_manager=user["role"] in {"administrator","coordinator"}
-        if not is_manager and user["id"] not in {task["created_by"],task["assigned_to"]}: return json_error("You do not have permission to update this task.",403)
+        if not can_view_task(user, task): return json_error("You do not have permission to update this task.",403)
+        # Enforce the workflow: a status change must be a legal transition from
+        # the current state, otherwise a participant could self-approve.
+        new_status = allowed_fields.get("status")
+        if new_status and new_status != task["status"]:
+            if new_status not in ALLOWED_TRANSITIONS.get(task["status"], set()):
+                return json_error(
+                    f"A task cannot move from '{task['status']}' to '{new_status}'.", 409
+                )
+            # Only a verifier/coordinator/administrator may close a task.
+            if new_status in {"completed", "verified"} and user["role"] not in {"administrator", "coordinator", "verifier"}:
+                return json_error("Only a verifier can complete a task.", 403)
         sets=[]; params=[]
         for k,v in allowed_fields.items(): sets.append(f"{k}=%s"); params.append(v)
         params.append(task_id)
@@ -445,8 +619,10 @@ def update_task(user, task_id):
 @login_required
 @roles_required("administrator","coordinator")
 def assign_task(user, task_id):
+    if not parse_uuid(task_id): return json_error("Invalid task id.", 400)
     data=request.get_json(silent=True) or {}; assignee=data.get("assignedTo")
     if not assignee: return json_error("Select a personnel account.")
+    if not parse_uuid(assignee): return json_error("Select a personnel account.", 400)
     with db() as conn, conn.cursor() as cur:
         cur.execute("SELECT id,task_code FROM tasks WHERE id=%s",(task_id,)); task=cur.fetchone()
         cur.execute("SELECT id,full_name FROM users WHERE id=%s AND is_active=TRUE",(assignee,)); target=cur.fetchone()
@@ -460,8 +636,10 @@ def assign_task(user, task_id):
 @app.post("/api/tasks/<task_id>/handover")
 @login_required
 def handover(user, task_id):
+    if not parse_uuid(task_id): return json_error("Invalid task id.", 400)
     data=request.get_json(silent=True) or {}; to_user=data.get("toUser"); reason=(data.get("reason") or "").strip(); notes=(data.get("notes") or "").strip()
     if not to_user or not reason: return json_error("Recipient and handover reason are required.")
+    if not parse_uuid(to_user): return json_error("Invalid recipient.", 400)
     with db() as conn, conn.cursor() as cur:
         cur.execute("SELECT id,task_code,assigned_to,created_by,status FROM tasks WHERE id=%s",(task_id,)); task=cur.fetchone()
         cur.execute("SELECT id,full_name FROM users WHERE id=%s AND is_active=TRUE",(to_user,)); target=cur.fetchone()
@@ -477,6 +655,7 @@ def handover(user, task_id):
 @app.post("/api/tasks/<task_id>/comments")
 @login_required
 def comment(user, task_id):
+    if not parse_uuid(task_id): return json_error("Invalid task id.", 400)
     text=(request.get_json(silent=True) or {}).get("text","").strip()
     if not text or len(text)>2000: return json_error("Comment must contain 1–2000 characters.")
     with db() as conn, conn.cursor() as cur:
@@ -492,8 +671,11 @@ def comment(user, task_id):
 @app.post("/api/tasks/<task_id>/evidence")
 @login_required
 def evidence(user, task_id):
+    if not parse_uuid(task_id): return json_error("Invalid task id.", 400)
     # Supports a real multipart file upload and a safe local file reference for testing.
-    description = (request.form.get("description") or request.json.get("description", "") if request.is_json else "").strip() if request.is_json else (request.form.get("description") or "").strip()
+    description = (request.form.get("description") or "").strip()
+    if not description and request.is_json:
+        description = (request.get_json(silent=True) or {}).get("description", "").strip()
     with db() as conn, conn.cursor() as cur:
         cur.execute("SELECT id,assigned_to,created_by,task_code FROM tasks WHERE id=%s",(task_id,)); t=cur.fetchone()
         if not t: return json_error("Task not found.",404)
@@ -540,12 +722,16 @@ def verifications(user):
 @login_required
 @roles_required("administrator","coordinator","verifier")
 def verify(user, task_id):
+    if not parse_uuid(task_id): return json_error("Invalid task id.", 400)
     data=request.get_json(silent=True) or {}; decision=(data.get("decision") or "").lower(); remarks=(data.get("remarks") or "").strip()
     if decision not in {"approve","reject"}: return json_error("Decision must be approve or reject.")
     if decision=="reject" and not remarks: return json_error("Remarks are required when rejecting a task.")
     with db() as conn, conn.cursor() as cur:
-        cur.execute("SELECT id,task_code,created_by,assigned_to FROM tasks WHERE id=%s",(task_id,)); t=cur.fetchone()
+        cur.execute("SELECT id,task_code,status,created_by,assigned_to FROM tasks WHERE id=%s",(task_id,)); t=cur.fetchone()
         if not t: return json_error("Task not found.",404)
+        # Only a task that is actually awaiting verification can be decided.
+        if t["status"] != "for_verification":
+            return json_error("Only tasks awaiting verification can be approved or rejected.", 409)
         status="completed" if decision=="approve" else "rejected"
         cur.execute("INSERT INTO task_verifications(task_id,verifier_id,decision,remarks) VALUES(%s,%s,%s,%s)",(task_id,user["id"],decision,remarks))
         cur.execute("UPDATE tasks SET status=%s WHERE id=%s",(status,task_id))
@@ -599,13 +785,21 @@ def audit_logs(user):
 # ---------- Activity 2 lab compatibility ----------
 @app.get("/lab")
 def lab_page():
+    if not LAB_ENABLED:
+        return json_error("The security lab is disabled. Set ENABLE_LAB=1 to run the Activity 2 lab.", 403)
     return send_from_directory(app.static_folder,"lab_test.html")
 
 
 @app.get("/api/lab-test/stream")
+@login_required
 def lab_test_stream():
-    # Preserve the existing localhost-only classroom lab endpoint.
-    import json as _json
+    # The classroom lab endpoint: an intentionally unprotected, localhost-only
+    # brute-force demonstration. It is opt-in (ENABLE_LAB=1) and now requires an
+    # authenticated session, so it can never be driven anonymously.
+    if not LAB_ENABLED:
+        return json_error("The security lab is disabled. Set ENABLE_LAB=1 to run the Activity 2 lab.", 403)
+    if request.remote_addr not in {"127.0.0.1", "::1"}:
+        return json_error("Lab tester is restricted to localhost.", 403)
     import time as _time
     import requests as _requests
     from urllib.parse import urlparse
@@ -638,4 +832,11 @@ def lab_test_stream():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # The Werkzeug debugger allows arbitrary code execution, so debug mode is
+    # opt-in and defaults to off. Set FLASK_DEBUG=1 for local development only.
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(
+        host=os.environ.get("HOST", "127.0.0.1"),
+        port=int(os.environ.get("PORT", "5000")),
+        debug=debug,
+    )
