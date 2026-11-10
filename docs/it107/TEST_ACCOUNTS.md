@@ -4,12 +4,11 @@ Created by `python scripts/seed_it107_accounts.py` (never through the public reg
 
 | Role | Username | Email | Password | Inbox |
 |---|---|---|---|---|
-| Administrator | `admin12` | `admin12@example.com` | `REDACTED_DEMO_PASSWORD` | `admin12@example.com` |
-| Administrator (seed copy) | `it107admin` | `it107.admin@example.com` | `REDACTED_DEMO_PASSWORD` | Replace with an inbox you can open on demo day |
+| Administrator | `it107admin` | `it107.admin@example.com` | `REDACTED_DEMO_PASSWORD` | Replace with an inbox you can open on demo day |
 | Requester (user 1) | `it107test1` | `it107.test1@example.com` | `REDACTED_DEMO_PASSWORD` | Replace with an inbox you can open on demo day |
 | Requester (user 2) | `it107test2` | `it107.test2@example.com` | `REDACTED_DEMO_PASSWORD` | Replace with an inbox you can open on demo day |
 
-> `admin12@example.com` already existed in this database; its password was reset to `REDACTED_DEMO_PASSWORD` and its username to `admin12`. Sign in with either the username or the email.
+> The seed script creates the accounts above. If you created a different local admin (for example, a personal Gmail address), keep that real inbox and its credentials in `.env` or a private note — never in this file or the Git repository.
 
 ## Where the OTP goes while SMTP is not configured
 
@@ -19,7 +18,7 @@ Created by `python scripts/seed_it107_accounts.py` (never through the public reg
 C:\Users\Administrator\Desktop\TaskChain_2\TaskChain\logs\mail_outbox.log
 ```
 
-After the password step, open that file and copy the latest `Your log-in code: 123456`. For the real demo, configure Gmail SMTP in `.env` and set `MAIL_DEV_MODE=0` so the code arrives at `admin12@example.com` instead.
+After the password step, open that file and copy the latest `Your log-in code: 123456`. For the real demo, configure Gmail SMTP in `.env` and set `MAIL_DEV_MODE=0` so the code arrives at the inbox configured in `SMTP_USER` instead.
 
 The three seeded answers for both requesters are:
 
