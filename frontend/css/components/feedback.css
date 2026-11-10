@@ -1,0 +1,105 @@
+/* ============ Loading, progress and empty states ============ */
+
+/* Thin route progress bar, shown only when a page render is slow. */
+.route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 240;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.route-progress span {
+  display: block;
+  height: 100%;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, var(--accent-bright), transparent);
+  transform: translateX(-120%);
+}
+.route-progress.active { opacity: 1; }
+.route-progress.active span { animation: route-slide 1.05s ease-in-out infinite; }
+@keyframes route-slide {
+  from { transform: translateX(-120%); }
+  to   { transform: translateX(360%); }
+}
+
+/* Skeleton placeholders. */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-panel-raised) 20%,
+    var(--bg-hover) 38%,
+    var(--bg-panel-raised) 56%
+  );
+  background-size: 400% 100%;
+  border-radius: 6px;
+  animation: skeleton-shimmer 1.35s ease infinite;
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+.skeleton-title { height: 18px; width: 38%; margin-bottom: 18px; }
+.skeleton-line { height: 12px; margin: 10px 0; }
+.skeleton-line.short { width: 58%; }
+.skeleton-line.tiny { width: 32%; }
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+.skeleton-card {
+  min-height: 105px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+}
+.skeleton-card .skeleton-line { margin: 10px 0; }
+.skeleton-card .skeleton-line:first-child { width: 45%; height: 10px; }
+.skeleton-card .skeleton-line:nth-child(2) { width: 60%; height: 26px; margin-top: 16px; }
+.skeleton-card .skeleton-line:last-child { width: 75%; height: 10px; }
+
+/* Empty state: same element the app already uses, with an icon. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.empty-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  color: var(--accent-bright);
+}
+.empty-icon svg { width: 20px; height: 20px; }
+.empty p {
+  margin: 0;
+  max-width: 440px;
+  line-height: 1.6;
+}
+.empty .empty-action {
+  margin-top: 4px;
+  padding: 7px 14px;
+  font-size: 11.5px;
+}
+
+@media (max-width: 1180px) {
+  .skeleton-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .skeleton-grid { grid-template-columns: 1fr; gap: 12px; }
+  .route-progress { height: 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-progress.active span,
+  .skeleton { animation: none; }
+}

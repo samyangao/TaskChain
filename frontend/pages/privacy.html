@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b100d">
+  <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
+  <meta name="description" content="TaskChain Privacy Notice under the Data Privacy Act of 2012 (RA 10173).">
+  <title>Privacy Notice — TaskChain</title>
+  <link rel="stylesheet" href="/static/css/pages/auth.css">
+</head>
+<body>
+  <header class="page-header">
+    <a class="top-brand" href="/" aria-label="TaskChain home">
+      <span class="top-brand-mark" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+      </span>
+      <span>TaskChain</span>
+    </a>
+    <nav class="auth-links" aria-label="Header links"><a href="/">Home</a><span>|</span><a href="/login.html">Log-in</a></nav>
+  </header>
+  <main class="privacy-wrap">
+    <article class="auth-card privacy-card">
+      <div class="card-head">
+        <p class="eyebrow">RA 10173 · Data Privacy Act of 2012</p>
+        <h2>TaskChain Privacy Notice</h2>
+        <p>TaskChain is a secure task handover and service completion system.</p>
+      </div>
+
+      <h3>What we collect</h3>
+      <p>We collect your ID Number, name, birthdate, address, email address, username, password (stored only as a bcrypt hash), three hashed security answers, Office/Unit, contact number, date of appointment and position/designation.</p>
+
+      <h3>Why we collect it</h3>
+      <p>The ID Number is the primary registration key. Name, birthdate and address identify you as an account holder. Email is used for verification codes and security alerts. Office/Unit and position/designation route task handovers. The contact number lets coordinators reach you about an active task. Date of appointment establishes your account history.</p>
+
+      <h3>How it is protected</h3>
+      <p>Passwords, security answers and one-time codes are hashed with bcrypt and are never stored in readable form. The contact number is encrypted at rest with AES-256-GCM. Every form is protected by a server-verified CSRF token and CAPTCHA. All database queries use prepared statements. The activity log is append-only, and the security dashboard is read-only and administrator-only.</p>
+
+      <h3>How long we keep it</h3>
+      <p>Account and task records are kept for the school term and for the period required by the institution's records policy. Security logs are retained for monitoring and audit. You may request correction of inaccurate personal data through the administrator.</p>
+
+      <h3>Your rights</h3>
+      <p>Under RA 10173 you have the right to be informed, to object, to access, to rectify, to erase or block, to damages, and to data portability. To exercise these rights, contact the TaskChain administrator through your Office/Unit.</p>
+
+      <h3>Consent</h3>
+      <p>Registration is refused unless you tick the consent checkbox. The date and time of your consent are stored with your account.</p>
+
+      <p class="auth-switch"><a href="/register.html">Back to registration</a> · <a href="/login.html">Sign in</a></p>
+    </article>
+  </main>
+  <footer class="page-footer">© 2026 TaskChain. All rights reserved.</footer>
+</body>
+</html>

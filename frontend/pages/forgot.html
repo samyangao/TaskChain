@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b100d">
+  <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
+  <meta name="description" content="Recover your TaskChain account with a security question and an emailed reset code.">
+  <title>Forgot Password — TaskChain</title>
+  <link rel="stylesheet" href="/static/css/pages/auth.css">
+</head>
+<body>
+  <header class="page-header">
+    <a class="top-brand" href="/" aria-label="TaskChain home">
+      <span class="top-brand-mark" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+      </span>
+      <span>TaskChain</span>
+    </a>
+    <nav class="auth-links" aria-label="Header links"><a href="/">Home</a><span>|</span><a href="/login.html">Log-in</a></nav>
+  </header>
+  <main class="auth">
+    <section class="auth-hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-top">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">T</div>
+          <div class="brand-text"><strong>TaskChain</strong><span>Connected work, verified.</span></div>
+        </div>
+      </div>
+      <div class="hero-main">
+        <p class="eyebrow">Account recovery</p>
+        <h1>Prove it<br>is you.</h1>
+        <p class="hero-lede">Identify your account, answer one seeded security question, then verify the emailed code.</p>
+      </div>
+    </section>
+    <section class="auth-panel">
+      <div class="auth-card">
+        <div class="card-head">
+          <p class="eyebrow">Forgot Password</p>
+          <h2 id="stepTitle">Find your account</h2>
+          <p id="stepCopy">Enter your username or email and solve the CAPTCHA.</p>
+        </div>
+        <div id="alert" class="alert" role="alert" aria-live="polite"><span class="alert-icon">!</span><span id="alertText"></span></div>
+
+        <form id="identifyForm" novalidate>
+          <div class="form-group">
+            <label for="identifier">Username or email <span class="req">*</span></label>
+            <div class="input-wrapper"><input id="identifier" type="text" autocomplete="username" required></div>
+            <div class="field-error" id="error-identifier"></div>
+          </div>
+          <div class="form-group">
+            <label for="captcha">CAPTCHA <span class="req">*</span></label>
+            <div class="captcha-row">
+              <img id="captchaImage" src="/api/captcha" alt="CAPTCHA image" width="180" height="64">
+              <button type="button" class="link-btn" id="captchaRefresh">New image</button>
+              <input id="captcha" type="text" maxlength="6" autocomplete="off" placeholder="Type the 5 characters" required>
+            </div>
+            <div class="field-error" id="error-captcha"></div>
+          </div>
+          <button type="submit" class="btn-submit" id="identifySubmit">
+            <span id="identifyText">Continue</span>
+            <span id="identifySpinner" class="spinner" hidden></span>
+          </button>
+        </form>
+
+        <form id="answerForm" hidden novalidate>
+          <div class="form-group">
+            <label for="questionNo">Security question <span class="req">*</span></label>
+            <div class="input-wrapper"><select id="questionNo" required></select></div>
+            <div class="field-error" id="error-questionNo"></div>
+          </div>
+          <div class="form-group">
+            <label for="answer">Your Answer <span class="req">*</span></label>
+            <div class="input-wrapper"><input id="answer" type="text" maxlength="50" required></div>
+            <div class="field-error" id="error-answer"></div>
+          </div>
+          <div class="form-group">
+            <label for="confirmAnswer">Re-enter Answer <span class="req">*</span></label>
+            <div class="input-wrapper"><input id="confirmAnswer" type="text" maxlength="50" required></div>
+            <div class="field-error" id="error-confirmAnswer"></div>
+          </div>
+          <button type="submit" class="btn-submit" id="answerSubmit">
+            <span id="answerText">Verify answer</span>
+            <span id="answerSpinner" class="spinner" hidden></span>
+          </button>
+        </form>
+
+        <form id="otpForm" hidden novalidate>
+          <div class="form-group">
+            <label for="code">Reset code <span class="req">*</span></label>
+            <div class="input-wrapper"><input class="totp-code" id="code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" required></div>
+            <div class="field-error" id="error-code"></div>
+          </div>
+          <button type="submit" class="btn-submit" id="otpSubmit">
+            <span id="otpText">Verify reset code</span>
+            <span id="otpSpinner" class="spinner" hidden></span>
+          </button>
+          <button type="button" class="link-btn" id="resend" disabled>Resend code in 60s</button>
+        </form>
+
+        <p class="auth-switch"><a href="/login.html">Back to sign in</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="page-footer">© 2026 TaskChain. All rights reserved.</footer>
+  <script src="/static/js/core/csrf.js"></script>
+  <script src="/static/js/pages/forgot.js"></script>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b100d">
+  <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
+  <meta name="description" content="Create a TaskChain account with secure registration, email verification, privacy consent and seeded security questions.">
+  <title>Create account — TaskChain</title>
+  <link rel="stylesheet" href="/static/css/pages/auth.css">
+</head>
+<body>
+  <header class="page-header">
+    <a class="top-brand" href="/" aria-label="TaskChain home">
+      <span class="top-brand-mark" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+      </span>
+      <span>TaskChain</span>
+    </a>
+    <nav class="auth-links" aria-label="Header links"><a href="/">Home</a><span>|</span><a href="/login.html">Log-in</a></nav>
+  </header>
+  <a href="#registerForm" class="skip-link">Skip to registration form</a>
+  <main class="auth">
+    <section class="auth-hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-top">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </div>
+          <div class="brand-text"><strong>TaskChain</strong><span>Connected work, verified.</span></div>
+        </div>
+      </div>
+      <div class="hero-main">
+        <h1>Join the chain.<br>Own every task.</h1>
+        <p class="hero-lede">Every field is checked in your browser and again on the server. Your data is protected under RA 10173.</p>
+        <div class="chain-strip" aria-hidden="true">
+          <span>Request</span><i></i><span>Assign</span><i></i><span>Handover</span><i></i><span>Evidence</span><i></i><span class="done">Verify</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card auth-card-wide">
+        <div class="card-head">
+          <p class="eyebrow">Get started</p>
+          <h2>Create your account</h2>
+        </div>
+
+        <div id="alert" class="alert" role="alert" aria-live="polite">
+          <span class="alert-icon" aria-hidden="true">!</span><span id="alertText"></span>
+        </div>
+
+        <form id="registerForm" novalidate autocomplete="on">
+          <div class="hp-field" aria-hidden="true">
+            <label for="website">Website</label>
+            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+          </div>
+
+          <nav class="stepper" id="stepper" aria-label="Registration steps">
+            <button type="button" class="stepper-step active" data-step-button="1" aria-current="step" aria-label="1 Identity">
+              <span class="stepper-num">1</span> <span class="stepper-label">Identity</span>
+            </button>
+            <span class="stepper-line" aria-hidden="true"></span>
+            <button type="button" class="stepper-step" data-step-button="2" aria-label="2 Address">
+              <span class="stepper-num">2</span> <span class="stepper-label">Address</span>
+            </button>
+            <span class="stepper-line" aria-hidden="true"></span>
+            <button type="button" class="stepper-step" data-step-button="3" aria-label="3 Account">
+              <span class="stepper-num">3</span> <span class="stepper-label">Account</span>
+            </button>
+            <span class="stepper-line" aria-hidden="true"></span>
+            <button type="button" class="stepper-step" data-step-button="4" aria-label="4 Security">
+              <span class="stepper-num">4</span> <span class="stepper-label">Security</span>
+            </button>
+            <span class="stepper-line" aria-hidden="true"></span>
+            <button type="button" class="stepper-step" data-step-button="5" aria-label="5 Work">
+              <span class="stepper-num">5</span> <span class="stepper-label">Work</span>
+            </button>
+          </nav>
+          <div class="stepper-progress" aria-hidden="true"><span id="stepperBar"></span></div>
+          <p class="stepper-hint" id="stepperHint" aria-live="polite">Step 1 of 5 · Identity</p>
+
+          <div class="form-section" data-step="1">
+            <h3>Identity</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="idNumber">ID Number <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="idNumber" type="text" placeholder="xxxx-xxxx" maxlength="9" required></div>
+                <div class="field-error" id="error-idNumber"></div>
+              </div>
+              <div class="form-group">
+                <label for="birthdate">Birthdate <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="birthdate" type="date" required></div>
+                <div class="field-error" id="error-birthdate"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="firstName" type="text" maxlength="23" required></div>
+                <div class="field-error" id="error-firstName"></div>
+              </div>
+              <div class="form-group">
+                <label for="middleName">Middle Name <span class="optional">optional</span></label>
+                <div class="input-wrapper"><input id="middleName" type="text" maxlength="23"></div>
+                <div class="field-error" id="error-middleName"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="familyName">Family Name <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="familyName" type="text" maxlength="23" required></div>
+                <div class="field-error" id="error-familyName"></div>
+              </div>
+              <div class="form-group">
+                <label for="nameExtension">Name Extension <span class="optional">optional</span></label>
+                <div class="input-wrapper">
+                  <select id="nameExtension">
+                    <option value="">None</option>
+                    <option>Jr.</option><option>Sr.</option><option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="input-wrapper" id="otherExtensionWrap" hidden>
+                  <input id="otherExtension" type="text" maxlength="4" placeholder="I, II, III, IV, IX, X">
+                </div>
+                <div class="field-error" id="error-nameExtension"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="age">Age <span class="optional">calculated</span></label>
+                <div class="input-wrapper"><input id="age" type="text" readonly placeholder="—"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section" data-step="2">
+            <h3>Address</h3>
+            <div class="form-group">
+              <label for="purokStreet">Purok / Street <span class="req">*</span></label>
+              <div class="input-wrapper"><input id="purokStreet" type="text" maxlength="50" required></div>
+              <div class="field-error" id="error-purokStreet"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="barangay">Barangay <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="barangay" type="text" maxlength="50" required></div>
+                <div class="field-error" id="error-barangay"></div>
+              </div>
+              <div class="form-group">
+                <label for="municipality">Municipality / City <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="municipality" type="text" maxlength="50" required></div>
+                <div class="field-error" id="error-municipality"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="province">Province <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="province" type="text" maxlength="50" required></div>
+                <div class="field-error" id="error-province"></div>
+              </div>
+              <div class="form-group">
+                <label for="country">Country <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="country" type="text" maxlength="50" value="Philippines" required></div>
+                <div class="field-error" id="error-country"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="zipCode">ZIP Code <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="zipCode" type="text" inputmode="numeric" maxlength="4" required></div>
+                <div class="field-error" id="error-zipCode"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section" data-step="3">
+            <h3>Account</h3>
+            <div class="form-group">
+              <label for="email">Email <span class="req">*</span></label>
+              <div class="input-wrapper"><input id="email" type="email" maxlength="100" placeholder="you@example.com" required></div>
+              <div class="field-error" id="error-email"></div>
+            </div>
+            <div class="form-group">
+              <label for="username">Username <span class="req">*</span></label>
+              <div class="input-wrapper"><input id="username" type="text" maxlength="19" placeholder="6–19 letters and digits, starts with a letter" required></div>
+              <div class="hint" id="usernameHint"></div>
+              <div class="field-error" id="error-username"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="password">Password <span class="req">*</span></label>
+                <div class="input-wrapper password-input-wrapper">
+                  <input id="password" type="password" autocomplete="new-password" required>
+                  <button type="button" class="toggle-password" id="showPassword" aria-pressed="false">Show</button>
+                </div>
+                <div class="strength"><span id="strengthBar"></span></div>
+                <div class="hint" id="strengthText">Weak</div>
+                <div class="field-error" id="error-password"></div>
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Re-enter Password <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="confirmPassword" type="password" autocomplete="new-password" required></div>
+                <div class="field-error" id="error-confirmPassword"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section" data-step="4">
+            <h3>Authentication questions</h3>
+            <p class="hint">Answers are hashed and stored in lowercase. Letters and spaces only, 2–50 characters.</p>
+            <div class="form-group">
+              <label id="label-q4" for="answer4">4. What is your mother's maiden first name? <span class="req">*</span></label>
+              <div class="input-wrapper"><input id="answer4" type="text" maxlength="50" required></div>
+              <div class="input-wrapper"><input id="confirmAnswer4" type="text" maxlength="50" placeholder="Re-enter answer" required></div>
+              <div class="field-error" id="error-answer4"></div>
+            </div>
+            <div class="form-group">
+              <label id="label-q7" for="answer7">7. What was the name of your elementary school? <span class="req">*</span></label>
+              <div class="input-wrapper"><input id="answer7" type="text" maxlength="50" required></div>
+              <div class="input-wrapper"><input id="confirmAnswer7" type="text" maxlength="50" placeholder="Re-enter answer" required></div>
+              <div class="field-error" id="error-answer7"></div>
+            </div>
+            <div class="form-group">
+              <label id="label-q1" for="answer1">1. What was the name of your first pet? <span class="req">*</span></label>
+              <div class="input-wrapper"><input id="answer1" type="text" maxlength="50" required></div>
+              <div class="input-wrapper"><input id="confirmAnswer1" type="text" maxlength="50" placeholder="Re-enter answer" required></div>
+              <div class="field-error" id="error-answer1"></div>
+            </div>
+          </div>
+
+          <div class="step" data-step="5">
+            <div class="form-section">
+              <h3>TaskChain fields</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="officeUnit">Office / Unit <span class="req">*</span></label>
+                <div class="input-wrapper">
+                  <select id="officeUnit" required>
+                    <option value="">Select Office/Unit</option>
+                    <option>Registrar</option><option>Finance</option><option>IT</option><option>HR</option><option>Admin</option>
+                  </select>
+                </div>
+                <div class="field-error" id="error-officeUnit"></div>
+              </div>
+              <div class="form-group">
+                <label for="contactNumber">Contact Number <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="contactNumber" type="tel" maxlength="11" placeholder="09XXXXXXXXX" required></div>
+                <div class="field-error" id="error-contactNumber"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dateOfAppointment">Date of Appointment <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="dateOfAppointment" type="date" required></div>
+                <div class="field-error" id="error-dateOfAppointment"></div>
+              </div>
+              <div class="form-group">
+                <label for="positionDesignation">Position / Designation <span class="req">*</span></label>
+                <div class="input-wrapper"><input id="positionDesignation" type="text" maxlength="50" required></div>
+                <div class="field-error" id="error-positionDesignation"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Privacy and CAPTCHA</h3>
+            <label class="check-label" for="privacyConsent">
+              <input id="privacyConsent" type="checkbox" required>
+              <span>I have read the <a href="/privacy" target="_blank" rel="noopener">Privacy Notice</a> and agree to the collection and processing of my personal data in accordance with the Data Privacy Act of 2012 (RA 10173).</span>
+            </label>
+            <div class="field-error" id="error-privacyConsent"></div>
+
+            <div class="form-group mt-14">
+              <label for="captcha">CAPTCHA <span class="req">*</span></label>
+              <div class="captcha-row">
+                <img id="captchaImage" src="/api/captcha" alt="CAPTCHA image" width="180" height="64">
+                <button type="button" class="link-btn" id="captchaRefresh">New image</button>
+                <input id="captcha" type="text" maxlength="6" autocomplete="off" placeholder="Type the 5 characters" required>
+              </div>
+              <div class="field-error" id="error-captcha"></div>
+            </div>
+          </div>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn-submit step-secondary" id="stepBack" hidden>Back</button>
+            <button type="button" class="btn-submit" id="stepNext">Continue to Address</button>
+            <button type="submit" class="btn-submit" id="submit" hidden>
+              <span id="submitText">Create account</span>
+              <span id="submitSpinner" class="spinner" hidden></span>
+            </button>
+          </div>
+        </form>
+
+        <p class="auth-switch">Already have an account? <a href="/login.html">Sign in</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">© 2026 TaskChain. All rights reserved.</footer>
+
+  <script src="/static/js/core/csrf.js"></script>
+  <script src="/static/js/pages/register.js"></script>
+</body>
+</html>

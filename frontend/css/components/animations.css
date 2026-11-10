@@ -1,0 +1,239 @@
+/* ==========================================================================
+   TaskChain motion layer
+   Subtle, transform/opacity-only animations. Everything is disabled by the
+   prefers-reduced-motion rule at the bottom.
+   ========================================================================== */
+
+@keyframes ui-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ui-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ui-scale-in {
+  from { opacity: 0; transform: scale(0.965); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes ui-slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ui-pop {
+  0%   { opacity: 0; transform: scale(0.88); }
+  62%  { opacity: 1; transform: scale(1.025); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes ui-soft-pulse {
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.06); }
+}
+@keyframes ui-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+@keyframes ui-ambient {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(1.5%, -1%, 0) scale(1.04); }
+  100% { transform: translate3d(-1%, 1.5%, 0) scale(1.02); }
+}
+@keyframes ui-bar-grow {
+  from { transform: scaleY(0); opacity: 0.2; }
+  to   { transform: scaleY(1); opacity: 1; }
+}
+@keyframes ui-sheen {
+  from { transform: translateX(-130%) skewX(-18deg); }
+  to   { transform: translateX(130%) skewX(-18deg); }
+}
+@keyframes ui-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.22); }
+  70%  { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* --------------------------------------------------------------------------
+   Ambient depth behind the workspace
+   -------------------------------------------------------------------------- */
+.main { position: relative; isolation: isolate; }
+.main::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(620px 420px at 88% -6%, rgba(34, 197, 94, 0.10), transparent 62%),
+    radial-gradient(520px 480px at 4% 104%, rgba(56, 189, 248, 0.055), transparent 60%);
+  animation: ui-ambient 18s ease-in-out infinite alternate;
+}
+.content { position: relative; z-index: 1; }
+
+/* --------------------------------------------------------------------------
+   Page and card entrances
+   -------------------------------------------------------------------------- */
+.content > * { animation: ui-fade-up 0.5s var(--ease-out) backwards; }
+.content > *:nth-child(1) { animation-delay: 0.02s; }
+.content > *:nth-child(2) { animation-delay: 0.06s; }
+.content > *:nth-child(3) { animation-delay: 0.10s; }
+.content > *:nth-child(4) { animation-delay: 0.14s; }
+.content > *:nth-child(5) { animation-delay: 0.18s; }
+.content > *:nth-child(6) { animation-delay: 0.22s; }
+.content > *:nth-child(n + 7) { animation-delay: 0.26s; }
+
+.card, .stat { animation: ui-fade-up 0.48s var(--ease-out) backwards; }
+.grid.stats .stat:nth-child(1) { animation-delay: 0.04s; }
+.grid.stats .stat:nth-child(2) { animation-delay: 0.09s; }
+.grid.stats .stat:nth-child(3) { animation-delay: 0.14s; }
+.grid.stats .stat:nth-child(4) { animation-delay: 0.19s; }
+.grid.stats .stat:nth-child(n + 5) { animation-delay: 0.24s; }
+
+.stat .num { animation: ui-pop 0.55s var(--ease-out) both; }
+.stat::before {
+  background-size: 200% 100%;
+  animation: ui-shimmer 7s linear infinite;
+}
+.stat-icon { transition: transform 0.25s var(--ease-out), background 0.25s ease, color 0.25s ease; }
+.stat:hover .stat-icon { transform: translateY(-2px) scale(1.06); }
+
+.card {
+  transition: transform 0.25s var(--ease-out), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.content .card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* --------------------------------------------------------------------------
+   Header, sidebar and navigation
+   -------------------------------------------------------------------------- */
+.topbar { animation: ui-slide-down 0.45s var(--ease-out) both; }
+.topbar::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+  background-size: 200% 100%;
+  animation: ui-shimmer 7s linear infinite;
+  pointer-events: none;
+}
+.app-footer { animation: ui-fade-in 0.7s ease both; }
+
+.nav-btn {
+  transition:
+    background 0.16s var(--ease-out),
+    color 0.16s var(--ease-out),
+    border-color 0.16s var(--ease-out),
+    transform 0.16s var(--ease-out);
+}
+.nav-btn:hover { transform: translateX(2px); }
+.nav-btn .nav-icon { transition: transform 0.22s var(--ease-out), background 0.2s ease, color 0.2s ease; }
+.nav-btn:hover .nav-icon { transform: scale(1.07) rotate(-2deg); }
+.nav-btn.active::before { animation: ui-soft-pulse 2.6s ease-in-out infinite; }
+
+.icon-btn { transition: transform 0.18s var(--ease-out), background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
+.icon-btn:hover { transform: translateY(-1px); }
+
+/* --------------------------------------------------------------------------
+   Buttons and badges
+   -------------------------------------------------------------------------- */
+.btn {
+  transition:
+    background 0.18s var(--ease-out),
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.16s var(--ease-out),
+    box-shadow 0.18s ease;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn.primary { position: relative; overflow: hidden; }
+.btn.primary::after {
+  content: '';
+  position: absolute;
+  top: -20%; bottom: -20%;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-130%) skewX(-18deg);
+}
+.btn.primary:hover::after {
+  opacity: 1;
+  animation: ui-sheen 0.75s var(--ease-out);
+}
+.badge { transition: transform 0.16s var(--ease-out), filter 0.16s ease; }
+.badge:hover { transform: translateY(-1px); filter: brightness(1.08); }
+
+.chain-step { transition: border-color 0.2s ease, background 0.2s ease; }
+.chain-step.current .node { animation: ui-soft-pulse 2.2s ease-in-out infinite; }
+.chain-step.done .node { animation: ui-soft-pulse 3.4s ease-in-out infinite; }
+
+/* --------------------------------------------------------------------------
+   Tables, forms and filters
+   -------------------------------------------------------------------------- */
+.table tbody tr { animation: ui-fade-in 0.3s ease both; }
+.table tbody tr:nth-child(1) { animation-delay: 0.02s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.04s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.06s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.08s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.10s; }
+.table tbody tr:nth-child(6) { animation-delay: 0.12s; }
+.table tbody tr:nth-child(7) { animation-delay: 0.14s; }
+.table tbody tr:nth-child(8) { animation-delay: 0.16s; }
+.table tbody tr { transition: background 0.15s ease; }
+.table tbody tr:hover { background: var(--bg-hover); }
+
+.form-field :is(input, select, textarea),
+.monitor-filters :is(input, select) {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.form-field :is(input, select, textarea):focus,
+.monitor-filters :is(input, select):focus {
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+   Monitor chart, modal, toast
+   -------------------------------------------------------------------------- */
+.monitor-chart rect {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: ui-bar-grow 0.65s var(--ease-out) both;
+}
+.monitor-chart rect:nth-child(1) { animation-delay: 0.01s; }
+.monitor-chart rect:nth-child(2) { animation-delay: 0.02s; }
+.monitor-chart rect:nth-child(3) { animation-delay: 0.03s; }
+.monitor-chart rect:nth-child(4) { animation-delay: 0.04s; }
+.monitor-chart rect:nth-child(5) { animation-delay: 0.05s; }
+.monitor-chart rect:nth-child(6) { animation-delay: 0.06s; }
+.monitor-chart rect:nth-child(7) { animation-delay: 0.07s; }
+.monitor-chart rect:nth-child(8) { animation-delay: 0.08s; }
+.monitor-chart rect:nth-child(n + 9) { animation-delay: 0.10s; }
+
+.modal-backdrop.show .modal { animation: ui-scale-in 0.24s var(--ease-out); }
+.toast.show { box-shadow: var(--shadow-dropdown), 0 0 34px -10px var(--accent-glow); }
+.empty { animation: ui-fade-in 0.4s ease both; }
+
+/* The monitor body is replaced every 60 seconds; do not replay the whole
+   dashboard entrance on each refresh. The chart bars keep their grow effect
+   as a subtle refresh cue. */
+#monitorBody .card,
+#monitorBody .stat,
+#monitorBody .table tbody tr,
+#monitorBody .empty { animation: none; }
+
+/* --------------------------------------------------------------------------
+   Accessibility
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

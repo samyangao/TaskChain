@@ -1,0 +1,32 @@
+/* Custom Scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: var(--radius-full);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); background-clip: padding-box; }
+
+.skip-link {
+  position: absolute;
+  left: -999px; top: 0;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 13px;
+  z-index: 200;
+  transition: left 0.15s ease;
+}
+.skip-link:focus { left: 16px; top: 16px; outline: 2px solid var(--accent-bright); }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+}
+
+a { color: var(--accent-bright); text-decoration: none; transition: color 0.15s ease; }
+a:hover { color: var(--accent); }

@@ -1,0 +1,20 @@
+/* ============ Theme overrides for hard-coded dark surfaces ============ */
+:root[data-theme="light"] .brand-mark { color: #ffffff; }
+:root[data-theme="light"] .btn.primary { color: #ffffff; }
+:root[data-theme="light"] .skip-link { color: #ffffff; }
+:root[data-theme="light"] .dot.count { color: #ffffff; }
+:root[data-theme="light"] .chain-step.done .node { color: #ffffff; }
+:root[data-theme="light"] .star-btn[aria-pressed="true"] { color: #ffffff; }
+:root[data-theme="light"] .avatar { color: #14532d; }
+:root[data-theme="light"] .report-event { background: rgba(16, 34, 23, 0.018); }
+:root[data-theme="light"] .empty { background: rgba(16, 34, 23, 0.014); }
+
+/* ============ Motion preferences ============ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

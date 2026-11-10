@@ -1,52 +1,65 @@
 # TaskChain
 
-**TaskChain: An Integrated Multi-Party Task Handover and Service Completion Management System**
+**A secure multi-party task handover and service completion system.**
 
-TaskChain is a Flask + PostgreSQL web application that tracks a task from request through assignment, processing, handover, evidence, verification, and completion. It preserves the original SecuritySys authentication/security foundation and extends it into the full TaskChain workflow.
+A Flask + PostgreSQL web application that tracks a task from request through assignment, processing, handover, evidence, verification and completion.
 
 ## Stack
-- Python / Flask REST API
+- Python / Flask REST API (Blueprints)
 - PostgreSQL + psycopg
-- HTML, CSS, JavaScript
-- bcrypt authentication
-- Server-side sessions
+- HTML, CSS, JavaScript (no build step)
+- bcrypt authentication, server-side sessions, optional TOTP
+
+## Project structure
+
+```
+TaskChain/
+├── run.py                  # entry point:  python run.py
+├── app/                    # backend
+│   ├── __init__.py         #   create_app()
+│   ├── config.py           #   paths, env flags, constants
+│   ├── db.py, utils.py, permissions.py, errors.py, hooks.py, log.py
+│   ├── routes/             #   one Blueprint per feature (auth, tasks, assignment, ...)
+│   └── services/           #   business logic (sla_engine, custody_chain, handovers, ...)
+├── frontend/               # everything the browser loads
+│   ├── pages/              #   login, register, dashboard, lab_test (.html)
+│   ├── css/                #   main.css imports base/ layout/ components/ pages/
+│   └── js/                 #   core/ components/ pages/ vendor/  (plain <script> tags, loaded in order)
+├── database/
+│   ├── schema.sql          #   base tables
+│   └── migrations/         #   numbered, re-runnable SQL files
+├── scripts/                # run.bat, setup_db.bat, lab_setup.py
+├── docs/activity-2/        # classroom lab notes and report template
+├── uploads/                # runtime evidence files (git-ignored)
+└── tests/
+```
 
 ## Quick start (Windows)
 
-1. Open Command Prompt in this folder.
-2. Activate the existing environment:
-   `venv\\Scripts\\activate`
-3. If dependencies are missing:
-   `python -m pip install -r requirements.txt`
-4. Create/update the PostgreSQL database using `schema.sql`.
-5. Check `.env` and set DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD and a strong FLASK_SECRET_KEY.
-6. Create the controlled administrator/lab account if needed:
-   `python lab_setup.py --password 05000`
-7. Start Flask:
-   `python app.py`
-8. Open `http://127.0.0.1:5000/`
+1. Copy `.env.example` to `.env` and set `DB_*` and a strong `FLASK_SECRET_KEY`.
+2. Create the database schema: run `scripts\setup_db.bat` (applies `database/schema.sql`, then every file in `database/migrations/`).
+3. Start the app: `scripts\run.bat` (creates `venv`, installs `requirements.txt`, runs `python run.py`).
+4. Open `http://127.0.0.1:5000/`.
+
+Optional lab/admin account: `python scripts/lab_setup.py --password <password>`.
+
+## Adding things
+- **New API feature:** add `app/routes/<feature>.py` with a `bp = Blueprint(...)`, then add it to `app/routes/__init__.py`.
+- **New business rule:** put it in `app/services/`, not in a route file.
+- **New page script:** add `frontend/js/pages/<page>.js` and a `<script>` line in `frontend/pages/dashboard.html` before `main.js`.
+- **New database change:** add `database/migrations/00N_<name>.sql` (make it safe to run twice).
 
 ## Roles
-Public registration creates `requester` accounts. An administrator can change roles in **Users** to:
-- requester
-- coordinator
-- personnel
-- verifier
-- administrator
-
-The included `lab_setup.py` resets `admin12@example.com` as an administrator for the existing classroom security activity.
+Public registration creates `requester` accounts. An administrator can change roles in **Users**: requester, coordinator, personnel, verifier, administrator.
 
 ## Core flow
 Login → Dashboard → New Request → Review/Assignment → Accept → Processing → Handover → Evidence → Verification → Completed → Audit/Reports.
 
-## PostgreSQL migration
-The schema is intentionally written to preserve an existing `users` and `login_attempts` foundation. Run the full `schema.sql` against the same PostgreSQL database. It creates the TaskChain tables and adds the `role` field to an older users table when necessary.
+## Security notes
+bcrypt hashing, generic login failures, failed-login lockout, role-based authorization, parameterized SQL, audit logging. Never commit `.env`. Uploaded evidence stays in `uploads/` (runtime data, not source).
 
-## Evidence uploads
-Uploaded evidence is stored in the local `uploads/` folder. The application validates file extensions and keeps the evidence record linked to its task and uploader. For production deployment, move file storage to controlled object storage and add stronger content scanning and authorization rules.
+## IT 107 security module
+The final project's secure registration, email OTP, CAPTCHA, seeded lockout, Forgot/Change Password, activity log, monitoring dashboard and `scripts/monitor.py` live alongside the task workflow. See `docs/it107/README_IT107.md` for setup, demo steps, the seed table and test accounts. Apply `database/migrations/002_it107_security_module.sql` (or re-run `scripts\setup_db.bat`) before starting the app.
 
-## Security
-The application keeps bcrypt hashing, generic login failures, failed-login lockout, authenticated sessions, role-based authorization, parameterized SQL, and audit logging. Do not commit `.env` or real passwords.
-
-## Existing classroom lab
-The original localhost-only Activity 2 page remains available at `/lab` and `static/lab_test.html`.
+## Classroom lab
+The Activity 2 page is available at `/lab` only when `ENABLE_LAB=1`. See `docs/activity-2/`.

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b100d">
+  <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
+  <meta name="description" content="Verify your TaskChain account with the 6-digit code sent to your email.">
+  <title>Verify your account — TaskChain</title>
+  <link rel="stylesheet" href="/static/css/pages/auth.css">
+</head>
+<body>
+  <header class="page-header">
+    <a class="top-brand" href="/" aria-label="TaskChain home">
+      <span class="top-brand-mark" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+      </span>
+      <span>TaskChain</span>
+    </a>
+    <nav class="auth-links" aria-label="Header links"><a href="/">Home</a><span>|</span><a href="/login.html">Log-in</a></nav>
+  </header>
+  <main class="auth">
+    <section class="auth-hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-top">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">T</div>
+          <div class="brand-text"><strong>TaskChain</strong><span>Connected work, verified.</span></div>
+        </div>
+      </div>
+      <div class="hero-main">
+        <p class="eyebrow">One more step</p>
+        <h1>Verify your<br>inbox.</h1>
+        <p class="hero-lede">Your account cannot sign in until the 6-digit code is accepted.</p>
+      </div>
+    </section>
+    <section class="auth-panel">
+      <div class="auth-card">
+        <div class="card-head">
+          <p class="eyebrow">Account verification</p>
+          <h2>Check your email</h2>
+          <p>We sent a 6-digit code to <strong id="emailText">your inbox</strong>. It expires in 3 minutes.</p>
+        </div>
+        <div id="alert" class="alert" role="alert" aria-live="polite"><span class="alert-icon">!</span><span id="alertText"></span></div>
+        <form id="verifyForm" novalidate>
+          <div class="form-group">
+            <label for="code">Verification code <span class="req">*</span></label>
+            <div class="input-wrapper"><input class="totp-code" id="code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" required></div>
+            <div class="field-error" id="error-code"></div>
+          </div>
+          <button type="submit" class="btn-submit" id="submit">
+            <span id="submitText">Verify account</span>
+            <span id="submitSpinner" class="spinner" hidden></span>
+          </button>
+          <button type="button" class="link-btn" id="resend" disabled>Resend code in 60s</button>
+        </form>
+        <p class="auth-switch">Wrong email? <a href="/register.html">Register again</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="page-footer">© 2026 TaskChain. All rights reserved.</footer>
+  <script src="/static/js/core/csrf.js"></script>
+  <script src="/static/js/pages/verify.js"></script>
+</body>
+</html>

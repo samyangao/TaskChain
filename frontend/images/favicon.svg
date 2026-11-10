@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="TaskChain">
+  <rect width="64" height="64" rx="16" fill="#0b100d"/>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="none" stroke="#22c55e" stroke-opacity=".35"/>
+  <g fill="none" stroke="#5be08a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M27 37a9 9 0 0 0 12.7.9l5-5a9 9 0 0 0-12.7-12.7l-2.9 2.9"/>
+    <path d="M37 27a9 9 0 0 0-12.7-.9l-5 5a9 9 0 0 0 12.7 12.7l2.9-2.9"/>
+  </g>
+</svg>

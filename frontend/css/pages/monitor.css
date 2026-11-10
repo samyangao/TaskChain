@@ -1,0 +1,59 @@
+/* Admin security monitor */
+.app-footer {
+  padding: 14px 26px;
+  font-size: 11px;
+  color: var(--ink-faint);
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.monitor-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+}
+.monitor-filters label {
+  display: grid;
+  gap: 5px;
+  flex: 1 1 150px;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.monitor-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  align-items: end;
+}
+.monitor-actions .btn { flex: 0 0 auto; }
+.monitor-filters input,
+.monitor-filters select {
+  min-width: 150px;
+}
+.monitor-chart {
+  width: 100%;
+  height: 140px;
+  display: block;
+}
+.monitor-chart-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-faint);
+  font-size: 10.5px;
+  margin-top: 4px;
+}
+.monitor-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+.monitor-gap { margin-top: 18px; }
+.mt-14 { margin-top: 14px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11.5px; }
+@media (max-width: 980px) {
+  .monitor-columns { grid-template-columns: 1fr; }
+}
+

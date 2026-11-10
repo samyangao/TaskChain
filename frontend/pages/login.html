@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b100d">
+  <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
+  <meta name="description" content="Sign in to TaskChain, a secure task handover and service completion system.">
+  <title>Sign in — TaskChain</title>
+  <link rel="stylesheet" href="/static/css/pages/auth.css">
+</head>
+<body>
+  <header class="page-header">
+    <a class="top-brand" href="/" aria-label="TaskChain home">
+      <span class="top-brand-mark" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+      </span>
+      <span>TaskChain</span>
+    </a>
+    <nav class="auth-links" aria-label="Header links"><a href="/">Home</a><span>|</span><a href="/register.html">Register</a></nav>
+  </header>
+  <a href="#loginForm" class="skip-link">Skip to sign in form</a>
+  <main class="auth">
+    <section class="auth-hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-top">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </div>
+          <div class="brand-text"><strong>TaskChain</strong><span>Connected work, verified.</span></div>
+        </div>
+      </div>
+      <div class="hero-main">
+        <p class="eyebrow">Enterprise service accountability</p>
+        <h1>Every task.<br>Fully traced.</h1>
+        <p class="hero-lede">A secured, audited workspace for requests, handovers and verified completion.</p>
+        <div class="chain-strip" aria-hidden="true">
+          <span>Request</span><i></i><span>Assign</span><i></i><span>Handover</span><i></i><span>Evidence</span><i></i><span class="done">Verify</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card">
+        <div class="card-head">
+          <p class="eyebrow">Secure access</p>
+          <h2>Welcome back</h2>
+        </div>
+
+        <div id="alert" class="alert" role="alert" aria-live="polite">
+          <span class="alert-icon" aria-hidden="true">!</span>
+          <span id="alertText"></span>
+        </div>
+
+        <form id="loginForm" novalidate>
+          <div class="form-group">
+            <label for="identifier">Username or email <span class="req">*</span></label>
+            <div class="input-wrapper">
+              <input id="identifier" type="text" autocomplete="username" placeholder="e.g. jdelacruz or you@example.com" required>
+            </div>
+            <div class="field-error" id="error-identifier"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password <span class="req">*</span></label>
+            <div class="input-wrapper password-input-wrapper">
+              <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+              <button type="button" class="toggle-password" id="show" aria-label="Show password" aria-pressed="false">Show</button>
+            </div>
+            <div class="field-error" id="error-password"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="captcha">CAPTCHA <span class="req">*</span></label>
+            <div class="captcha-row">
+              <img id="captchaImage" src="/api/captcha" alt="CAPTCHA image" width="180" height="64">
+              <button type="button" class="link-btn" id="captchaRefresh" title="Get a new image">New image</button>
+              <input id="captcha" type="text" inputmode="text" autocomplete="off" maxlength="6" placeholder="Type the 5 characters" required>
+            </div>
+            <div class="field-error" id="error-captcha"></div>
+          </div>
+
+          <label class="check-label" for="remember">
+            <input id="remember" type="checkbox"> <span>Remember this browser</span>
+          </label>
+
+          <button type="submit" class="btn-submit" id="submit">
+            <span id="submitText">Sign in</span>
+            <span id="submitSpinner" class="spinner" hidden></span>
+          </button>
+
+          <p class="auth-switch" id="forgotWrap" hidden>
+            <a href="/forgot.html" id="forgotLink">Forgot Password? Reset Here</a>
+          </p>
+          <p class="lockout" id="lockout" hidden></p>
+        </form>
+
+        <form id="otpForm" class="totp-step" hidden novalidate>
+          <div class="totp-step-icon" aria-hidden="true">6</div>
+          <p class="totp-hint" id="otpHint">Enter the 6-digit code sent to your email.</p>
+          <input class="totp-code" id="otpCode" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" required>
+          <div class="field-error" id="error-otp"></div>
+          <button type="submit" class="btn-submit" id="otpSubmit">
+            <span id="otpSubmitText">Verify code</span>
+            <span id="otpSpinner" class="spinner" hidden></span>
+          </button>
+          <button type="button" class="link-btn" id="resend" disabled>Resend code in 60s</button>
+          <button type="button" class="link-btn totp-back" id="otpBack">Use a different account</button>
+        </form>
+
+        <p class="auth-switch" id="registerSwitch">
+          Don't have an account? <a href="/register.html" id="registerLink">Create one</a>
+        </p>
+        <div class="auth-footer-note">
+          Protected by bcrypt hashing, server-side lockout, CSRF tokens and email verification.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">© 2026 TaskChain. All rights reserved.</footer>
+
+  <script src="/static/js/core/csrf.js"></script>
+  <script src="/static/js/pages/login.js"></script>
+</body>
+</html>
