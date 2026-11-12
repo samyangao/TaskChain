@@ -27,12 +27,27 @@ ADMIN_EMAIL = os.environ.get("SEED_ADMIN_EMAIL", "it107.admin@example.com").stri
 TEST1_EMAIL = os.environ.get("SEED_USER1_EMAIL", "it107.test1@example.com").strip()
 TEST2_EMAIL = os.environ.get("SEED_USER2_EMAIL", "it107.test2@example.com").strip()
 
+
+def required_password(name):
+    value = os.environ.get(name, "").strip()
+    if not value:
+        raise SystemExit(
+            f"{name} is missing. Add it to .env (see .env.example); "
+            "demo passwords must not be committed to Git."
+        )
+    return value
+
+
+ADMIN_PASSWORD = required_password("SEED_ADMIN_PASSWORD")
+TEST1_PASSWORD = required_password("SEED_USER1_PASSWORD")
+TEST2_PASSWORD = required_password("SEED_USER2_PASSWORD")
+
 ACCOUNTS = (
     {
         "email": ADMIN_EMAIL,
         "username": "it107admin",
         "full_name": "IT 107 Administrator",
-        "password": "REDACTED_DEMO_PASSWORD",
+        "password": ADMIN_PASSWORD,
         "role": "administrator",
         "profile": None,
     },
@@ -40,7 +55,7 @@ ACCOUNTS = (
         "email": TEST1_EMAIL,
         "username": "it107test1",
         "full_name": "Juan Dela Cruz",
-        "password": "REDACTED_DEMO_PASSWORD",
+        "password": TEST1_PASSWORD,
         "role": "requester",
         "profile": {
             "id_number": "2024-0001", "first_name": "Juan", "middle_name": None,
@@ -56,7 +71,7 @@ ACCOUNTS = (
         "email": TEST2_EMAIL,
         "username": "it107test2",
         "full_name": "Maria Santos",
-        "password": "REDACTED_DEMO_PASSWORD",
+        "password": TEST2_PASSWORD,
         "role": "requester",
         "profile": {
             "id_number": "2024-0002", "first_name": "Maria", "middle_name": None,

@@ -4,11 +4,11 @@ Created by `python scripts/seed_it107_accounts.py` (never through the public reg
 
 | Role | Username | Email | Password | Inbox |
 |---|---|---|---|---|
-| Administrator | `it107admin` | `it107.admin@example.com` | `REDACTED_DEMO_PASSWORD` | Replace with an inbox you can open on demo day |
-| Requester (user 1) | `it107test1` | `it107.test1@example.com` | `REDACTED_DEMO_PASSWORD` | Replace with an inbox you can open on demo day |
-| Requester (user 2) | `it107test2` | `it107.test2@example.com` | `REDACTED_DEMO_PASSWORD` | Replace with an inbox you can open on demo day |
+| Administrator | `it107admin` | `it107.admin@example.com` | `SEED_ADMIN_PASSWORD` in `.env` | Replace with an inbox you can open on demo day |
+| Requester (user 1) | `it107test1` | `it107.test1@example.com` | `SEED_USER1_PASSWORD` in `.env` | Replace with an inbox you can open on demo day |
+| Requester (user 2) | `it107test2` | `it107.test2@example.com` | `SEED_USER2_PASSWORD` in `.env` | Replace with an inbox you can open on demo day |
 
-> The seed script creates the accounts above. If you created a different local admin (for example, a personal Gmail address), keep that real inbox and its credentials in `.env` or a private note — never in this file or the Git repository.
+> The public repository deliberately does not contain the demo passwords. The values are in the local `.env` and in the private submission sheet. Never commit `.env` or the private sheet.
 
 > On the demo machine, set `SEED_ADMIN_EMAIL`, `SEED_USER1_EMAIL` and `SEED_USER2_EMAIL` in `.env` to real inboxes (Gmail plus-aliases work well). The seed script reads them; the public repository keeps the `example.com` placeholders.
 
@@ -32,7 +32,7 @@ The three seeded answers for both requesters are:
 
 1. `scripts/seed_it107_accounts.py` defaults to example.com addresses. On the demo machine, set `SEED_ADMIN_EMAIL`, `SEED_USER1_EMAIL` and `SEED_USER2_EMAIL` in `.env`, then re-run the script.
 2. Set `MAIL_DEV_MODE=0` and fill the SMTP values in `.env` so codes arrive in a real inbox.
-3. Change the demo passwords if your instructor requires unique ones. The seed script stores bcrypt hashes, never plain text.
+3. Set `SEED_ADMIN_PASSWORD`, `SEED_USER1_PASSWORD` and `SEED_USER2_PASSWORD` in `.env` before running the seed script. The seed script stores bcrypt hashes and refuses to run if the values are missing.
 4. The administrator has no security questions, because administrators are not created through the registration form. Use the requesters for the Forgot Password demo.
 
 ## Verification
