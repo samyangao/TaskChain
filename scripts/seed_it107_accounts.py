@@ -35,6 +35,10 @@ def required_password(name):
             f"{name} is missing. Add it to .env (see .env.example); "
             "demo passwords must not be committed to Git."
         )
+    if value.lower().startswith("replace_with") or value.lower() in {"password", "changeme", "secret"}:
+        raise SystemExit(
+            f"{name} still contains a placeholder. Set a real demo password in .env."
+        )
     return value
 
 
