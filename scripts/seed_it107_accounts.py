@@ -8,6 +8,7 @@ form), as the handout requires for administrators. Passwords are hashed with
 bcrypt; the answers use the same Q4/Q7/Q1 seed.
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -22,9 +23,13 @@ from app.services.security_controls import remember_password  # noqa: E402
 
 ANSWERS = ((4, "Maria"), (7, "San Jose Elementary"), (1, "Bantay"))
 
+ADMIN_EMAIL = os.environ.get("SEED_ADMIN_EMAIL", "it107.admin@example.com").strip()
+TEST1_EMAIL = os.environ.get("SEED_USER1_EMAIL", "it107.test1@example.com").strip()
+TEST2_EMAIL = os.environ.get("SEED_USER2_EMAIL", "it107.test2@example.com").strip()
+
 ACCOUNTS = (
     {
-        "email": "it107.admin@example.com",
+        "email": ADMIN_EMAIL,
         "username": "it107admin",
         "full_name": "IT 107 Administrator",
         "password": "REDACTED_DEMO_PASSWORD",
@@ -32,7 +37,7 @@ ACCOUNTS = (
         "profile": None,
     },
     {
-        "email": "it107.test1@example.com",
+        "email": TEST1_EMAIL,
         "username": "it107test1",
         "full_name": "Juan Dela Cruz",
         "password": "REDACTED_DEMO_PASSWORD",
@@ -48,7 +53,7 @@ ACCOUNTS = (
         },
     },
     {
-        "email": "it107.test2@example.com",
+        "email": TEST2_EMAIL,
         "username": "it107test2",
         "full_name": "Maria Santos",
         "password": "REDACTED_DEMO_PASSWORD",
@@ -70,20 +75,35 @@ def main():
     with db() as conn, conn.cursor() as cur:
         for account in ACCOUNTS:
             password_hash = bcrypt.hashpw(account["password"].encode(), bcrypt.gensalt(rounds=12)).decode()
-            cur.execute("SELECT id FROM users WHERE email=%s", (account["email"],))
+            cur.execute("SELECT id FROM users WHERE username=%s", (account["username"],))
             row = cur.fetchone()
             if row:
+                cur.execute(
+                    "SELECT username FROM users WHERE email=%s AND id<>%s",
+                    (account["email"], row["id"]),
+                )
+                if cur.fetchone():
+                    raise RuntimeError(
+                        f"{account['email']} is already used by another account; "
+                        f"set SEED_*_EMAIL to a different inbox"
+                    )
                 user_id = row["id"]
                 cur.execute(
-                    """UPDATE users SET full_name=%s, username=%s, password_hash=%s,
+                    """UPDATE users SET full_name=%s, email=%s, username=%s, password_hash=%s,
                               role=%s, is_active=TRUE, is_verified=TRUE,
                               failed_login_attempts=0, lockout_tier=0, locked_until=NULL
                         WHERE id=%s""",
-                    (account["full_name"], account["username"], password_hash,
+                    (account["full_name"], account["email"], account["username"], password_hash,
                      account["role"], user_id),
                 )
                 print(f"updated {account['email']}")
             else:
+                cur.execute("SELECT 1 FROM users WHERE email=%s", (account["email"],))
+                if cur.fetchone():
+                    raise RuntimeError(
+                        f"{account['email']} is already used by a different username; "
+                        f"set SEED_*_EMAIL to a different inbox"
+                    )
                 cur.execute(
                     """INSERT INTO users(full_name,email,password_hash,role,username,is_verified)
                        VALUES (%s,%s,%s,%s,%s,TRUE) RETURNING id""",

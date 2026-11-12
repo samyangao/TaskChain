@@ -10,6 +10,8 @@ Created by `python scripts/seed_it107_accounts.py` (never through the public reg
 
 > The seed script creates the accounts above. If you created a different local admin (for example, a personal Gmail address), keep that real inbox and its credentials in `.env` or a private note — never in this file or the Git repository.
 
+> On the demo machine, set `SEED_ADMIN_EMAIL`, `SEED_USER1_EMAIL` and `SEED_USER2_EMAIL` in `.env` to real inboxes (Gmail plus-aliases work well). The seed script reads them; the public repository keeps the `example.com` placeholders.
+
 ## Where the OTP goes while SMTP is not configured
 
 `MAIL_DEV_MODE=1` writes every code to:
@@ -28,7 +30,7 @@ The three seeded answers for both requesters are:
 
 ## Important before demo day
 
-1. `scripts/seed_it107_accounts.py` uses example.com addresses. Change the `ACCOUNTS` list to real Gmail addresses you control, then re-run the script.
+1. `scripts/seed_it107_accounts.py` defaults to example.com addresses. On the demo machine, set `SEED_ADMIN_EMAIL`, `SEED_USER1_EMAIL` and `SEED_USER2_EMAIL` in `.env`, then re-run the script.
 2. Set `MAIL_DEV_MODE=0` and fill the SMTP values in `.env` so codes arrive in a real inbox.
 3. Change the demo passwords if your instructor requires unique ones. The seed script stores bcrypt hashes, never plain text.
 4. The administrator has no security questions, because administrators are not created through the registration form. Use the requesters for the Forgot Password demo.
