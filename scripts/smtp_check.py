@@ -108,6 +108,11 @@ def diagnose(exc: Exception) -> None:
         print("Turn on 2-Step Verification first, then create an App Password:")
         print("https://myaccount.google.com/apppasswords")
         print(f"Server response: {exc.smtp_code} {exc.smtp_error!r}")
+    elif isinstance(exc, smtplib.SMTPServerDisconnected):
+        print("\nGmail closed the connection during the SMTP test.")
+        print("This is usually a transient network, firewall or antivirus interruption.")
+        print("Try the SSL port instead:")
+        print("  python scripts\\smtp_check.py --email you@gmail.com --to you@gmail.com --port 465")
     elif isinstance(exc, smtplib.SMTPConnectError):
         print("\nCould not connect to Gmail SMTP.")
         print("Check the network/firewall and that smtp.gmail.com:587 is reachable.")
@@ -125,6 +130,8 @@ def main() -> int:
     parser.add_argument("--email", help="Gmail address used to sign in (SMTP_USER)")
     parser.add_argument("--from", dest="sender", help="From address (defaults to --email)")
     parser.add_argument("--to", dest="recipient", help="Where to send the test email (defaults to --email)")
+    parser.add_argument("--host", help="SMTP host (default: smtp.gmail.com)")
+    parser.add_argument("--port", type=int, help="SMTP port: 587 for STARTTLS, 465 for SSL")
     parser.add_argument("--no-write", action="store_true", help="Test only; do not update .env")
     args = parser.parse_args()
 
@@ -143,11 +150,15 @@ def main() -> int:
         print("No App Password entered.")
         return 2
     if len(password) != 16:
-        print(f"Warning: Gmail App Passwords are normally 16 characters; got {len(password)}.")
-        print("Trying anyway. If login fails, create a new App Password.")
+        print(f"\nGmail App Passwords are exactly 16 characters; you entered {len(password)}.")
+        print("This is usually the normal Gmail password, or an incomplete copy.")
+        print("Create a new App Password at https://myaccount.google.com/apppasswords")
+        print("Copy all 16 characters (remove the spaces Google displays).")
+        print("\nNothing was changed; no connection was attempted.")
+        return 2
 
-    host = current.get("SMTP_HOST") or DEFAULTS["SMTP_HOST"]
-    port = int(current.get("SMTP_PORT") or DEFAULTS["SMTP_PORT"])
+    host = (args.host or current.get("SMTP_HOST") or DEFAULTS["SMTP_HOST"]).strip()
+    port = args.port or int(current.get("SMTP_PORT") or DEFAULTS["SMTP_PORT"])
 
     print(f"\nTesting {email} via {host}:{port} ...")
     try:
