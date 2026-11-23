@@ -16,7 +16,21 @@ function statusBars(s) {
     </div>`).join('')}</div>`;
 }
 
-function taskTable(rows) {
+function taskTable(rows, options = {}) {
+  if (options.requesterView) {
+    return `<div class="table-wrap"><table class="table requester-table">
+      <thead><tr><th>Request</th><th>Title</th><th>Status</th><th>Handler</th><th>Updated</th></tr></thead>
+      <tbody>${rows.map(t => `
+        <tr class="clickable" data-task="${t.id}">
+          <td><strong>${esc(t.task_code)}</strong>${t.is_blocked ? ' <span class="badge badge-red">Blocked</span>' : ''}</td>
+          <td>${esc(t.title)}</td>
+          <td>${badge(t.status)}${t.sla_state && slaChip(t.sla_state) ? `<br>${slaChip(t.sla_state)}` : ''}</td>
+          <td>${esc(t.assignee || 'Unassigned')}</td>
+          <td>${fmt(t.updated_at)}</td>
+        </tr>`).join('')}
+      </tbody></table></div>`;
+  }
+
   return `<div class="table-wrap"><table class="table task-table">
     <thead><tr><th>Task</th><th>Requester</th><th>Responsible</th><th>Status</th><th>Priority</th><th>Due</th></tr></thead>
     <tbody>${rows.map(t => `
