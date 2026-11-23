@@ -63,6 +63,23 @@
 .skeleton-card .skeleton-line:nth-child(2) { width: 60%; height: 26px; margin-top: 16px; }
 .skeleton-card .skeleton-line:last-child { width: 75%; height: 10px; }
 
+/* Reusable page/table skeleton for pages that load before rendering data. */
+.skeleton-page { display: grid; gap: 16px; }
+.skeleton-table { padding: 4px 0; }
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.9fr 0.7fr;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.skeleton-row:last-child { border-bottom: 0; }
+.skeleton-row .skeleton-line { margin: 0; height: 11px; }
+.skeleton-row .skeleton-line:nth-child(2) { width: 82%; }
+.skeleton-row .skeleton-line:nth-child(3) { width: 64%; }
+.skeleton-row .skeleton-line:nth-child(4) { width: 46%; }
+
 /* Empty state: same element the app already uses, with an icon. */
 .empty {
   display: flex;
@@ -76,9 +93,9 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--accent-soft);
-  border: 1px solid rgba(34, 197, 94, 0.18);
-  color: var(--accent-bright);
+  background: var(--status-green-bg);
+  border: 1px solid var(--status-green-border);
+  color: var(--status-green-ink);
 }
 .empty-icon svg { width: 20px; height: 20px; }
 .empty p {
@@ -97,6 +114,7 @@
 }
 @media (max-width: 640px) {
   .skeleton-grid { grid-template-columns: 1fr; gap: 12px; }
+  .skeleton-row { grid-template-columns: 1fr; gap: 8px; }
   .route-progress { height: 3px; }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,13 @@
 // --- Component Helpers ---
 function statusBars(s) {
-  const vals = [['Submitted', s.new_requests], ['In Progress', s.in_progress], ['Waiting', s.waiting], ['Handover', s.handover], ['Verification', s.verification], ['Completed', s.completed]];
+  const vals = [
+    [statusLabel('submitted'), s.new_requests],
+    [statusLabel('in_progress'), s.in_progress],
+    [statusLabel('waiting'), s.waiting],
+    [statusLabel('handover'), s.handover],
+    [statusLabel('for_verification'), s.verification],
+    [statusLabel('completed'), s.completed]
+  ];
   const max = Math.max(1, ...vals.map(x => x[1]));
   return `<div class="bar-list">${vals.map(x => `
     <div class="bar-row">

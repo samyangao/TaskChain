@@ -9,22 +9,37 @@ const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({
 
 const fmt = d => d ? new Date(d).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 const initials = n => (n || 'U').split(' ').map(x => x[0]).slice(0, 2).join('').toUpperCase();
-const statusLabel = s => (s || '').replaceAll('_', ' ').replace(/\b\w/g, x => x.toUpperCase());
+const humanizeStatus = s => (s || '').replaceAll('_', ' ').replace(/\b\w/g, x => x.toUpperCase());
+
+// One source of truth for the backend status enum. Display labels may be
+// humanized, but the keys must stay 1:1 with app/config.py.
+const STATUS_META = {
+  submitted:        { label: 'Submitted',        tone: 'blue' },
+  under_review:     { label: 'Under Review',     tone: 'blue' },
+  assigned:         { label: 'Assigned',         tone: 'blue' },
+  accepted:         { label: 'Accepted',         tone: 'blue' },
+  in_progress:      { label: 'In Progress',      tone: 'blue' },
+  waiting:          { label: 'Waiting',          tone: 'amber' },
+  handover:         { label: 'Handover',         tone: 'purple' },
+  for_verification: { label: 'For Verification', tone: 'amber' },
+  verified:         { label: 'Verified',         tone: 'green' },
+  completed:        { label: 'Completed',        tone: 'green' },
+  rejected:         { label: 'Rejected',         tone: 'red' },
+  cancelled:        { label: 'Cancelled',        tone: 'gray' },
+  overdue:          { label: 'Overdue',          tone: 'red' }
+};
+
+const statusMeta = s => STATUS_META[s] || { label: humanizeStatus(s), tone: 'gray' };
+const statusLabel = s => statusMeta(s).label;
 
 const badge = s => {
-  let c = 'gray';
-  if (['completed', 'verified'].includes(s)) c = 'green';
-  else if (['in_progress', 'accepted', 'assigned', 'submitted'].includes(s)) c = 'blue';
-  else if (['waiting', 'for_verification', 'overdue'].includes(s)) c = 'orange';
-  else if (['rejected', 'cancelled'].includes(s)) c = 'red';
-  else if (s === 'handover') c = 'purple';
-  
-  return `<span class="badge badge-${c}">${esc(statusLabel(s))}</span>`;
+  const meta = statusMeta(s);
+  return `<span class="badge badge-${meta.tone}">${esc(meta.label)}</span>`;
 };
 
 const hoursLabel = h => (h % 24 === 0) ? `${h / 24} day${h / 24 === 1 ? '' : 's'}` : `${h} hour${h === 1 ? '' : 's'}`;
 const slaChip = st => ({
-  due_soon: '<span class="badge badge-orange">Due soon</span>',
+  due_soon: '<span class="badge badge-amber">Due soon</span>',
   overdue: '<span class="badge badge-red">Overdue</span>',
   escalated: '<span class="badge badge-red">Escalated</span>'
 }[st] || '');

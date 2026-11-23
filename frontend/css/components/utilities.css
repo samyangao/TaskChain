@@ -21,7 +21,7 @@
 /* Notice / empty states */
 .notice {
   padding: 13px 15px;
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.045), transparent 70%), var(--bg-panel-raised);
+  background: linear-gradient(90deg, var(--status-green-bg), transparent 70%), var(--bg-panel-raised);
   border: 1px solid var(--line);
   border-left: 2px solid var(--accent);
   border-radius: var(--radius-sm);
