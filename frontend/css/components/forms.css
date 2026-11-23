@@ -45,7 +45,8 @@
   line-height: 1.5;
   color: var(--ink-faint);
 }
-.form-field .field-error {
+.form-field .field-error,
+.form-error {
   display: flex;
   align-items: flex-start;
   gap: 6px;
@@ -53,7 +54,10 @@
   line-height: 1.45;
   color: var(--status-red-ink);
 }
-.form-field .field-error::before {
+.form-field .field-error:empty,
+.form-error:empty { display: none; }
+.form-field .field-error::before,
+.form-error::before {
   content: '!';
   display: inline-grid;
   place-items: center;
@@ -67,6 +71,7 @@
   font-size: 10px;
   font-weight: 800;
 }
+.form-error { margin: 0 0 14px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--status-red-bg); border: 1px solid var(--status-red-border); }
 
 /* Optional grouped form sections */
 .form-section {
