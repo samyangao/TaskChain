@@ -20,21 +20,109 @@ const ICONS = {
   done: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
 };
 
+const ALL_ROLES = ['requester', 'coordinator', 'personnel', 'verifier', 'administrator'];
+
 const NAV_ITEMS = [
-  ['dashboard', 'Dashboard', 'workspace', false],
-  ['tasks', 'My Tasks', 'workspace', false],
-  ['new', 'New Request', 'workspace', false],
-  ['handover', 'Handover', 'workspace', false],
-  ['verification', 'Verification', 'workspace', false],
-  ['notifications', 'Notifications', 'workspace', false],
-  ['calendar', 'Calendar', 'workspace', false],
-  ['security', 'Security', 'workspace', false],
-  ['reports', 'Reports', 'manage', false],
-  ['sla', 'SLA Settings', 'manage', false],
-  ['users', 'Users', 'manage', false],
-  ['audit', 'Audit Logs', 'manage', false],
-  ['monitor', 'Security Monitor', 'manage', true]
+  {
+    key: 'dashboard', label: 'Dashboard', group: 'workspace', roles: ALL_ROLES
+  },
+  {
+    key: 'tasks', label: 'My Tasks', group: 'workspace', roles: ALL_ROLES,
+    labels: {
+      requester: 'My Requests',
+      coordinator: 'All Requests',
+      administrator: 'All Requests'
+    }
+  },
+  {
+    key: 'new', label: 'New Request', group: 'workspace', roles: ALL_ROLES
+  },
+  {
+    key: 'handover', label: 'Handover', group: 'workspace',
+    roles: ['coordinator', 'personnel', 'administrator']
+  },
+  {
+    key: 'verification', label: 'Verification', group: 'workspace',
+    roles: ['coordinator', 'verifier', 'administrator']
+  },
+  {
+    key: 'notifications', label: 'Notifications', group: 'workspace', roles: ALL_ROLES
+  },
+  {
+    key: 'calendar', label: 'Calendar', group: 'workspace', roles: ALL_ROLES
+  },
+  {
+    key: 'security', label: 'Security', group: 'workspace', roles: ALL_ROLES
+  },
+  {
+    key: 'reports', label: 'Reports', group: 'manage',
+    roles: ['coordinator', 'administrator']
+  },
+  {
+    key: 'sla', label: 'SLA Settings', group: 'manage',
+    roles: ['coordinator', 'administrator']
+  },
+  {
+    key: 'users', label: 'Users', group: 'manage',
+    roles: ['coordinator', 'administrator']
+  },
+  {
+    key: 'audit', label: 'Audit Logs', group: 'manage',
+    roles: ['coordinator', 'administrator']
+  },
+  {
+    key: 'monitor', label: 'Security Monitor', group: 'manage',
+    roles: ['administrator']
+  }
 ];
+
+function navItem(key) {
+  return NAV_ITEMS.find(item => item.key === key);
+}
+
+function navLabel(key) {
+  const item = navItem(key);
+  if (!item) return key;
+  return (item.labels && item.labels[state.user.role]) || item.label;
+}
+
+function isPageAllowed(key) {
+  const item = navItem(key);
+  return !item || item.roles.includes(state.user.role);
+}
+
+// Content-level page headers. Dashboard renders its own greeting; every other
+// page gets the same title/subtitle structure so the shell stays consistent.
+const PAGE_META = {
+  tasks:         { title: null, subtitle: 'Requests you created or are handling, with their latest status and due date.',
+                   subtitleByRole: {
+                     coordinator: 'All requests in the workspace, with their latest status, handler and due date.',
+                     administrator: 'All requests in the workspace, with their latest status, handler and due date.',
+                     personnel: 'Tasks assigned to you or created by you, with their latest status and due date.',
+                     verifier: 'Tasks you created or are handling, with their latest status and due date.'
+                   } },
+  new:           { title: 'New Request', subtitle: 'Create a request and attach anything the team will need.' },
+  handover:      { title: 'Handover', subtitle: 'Pass a task to the next person and record what moved with it.' },
+  verification:  { title: 'Verification', subtitle: 'Review completed work, evidence and completion notes before signing off.' },
+  notifications: { title: 'Notifications', subtitle: 'Updates, mentions and reminders for your account.' },
+  calendar:      { title: 'Calendar', subtitle: 'Upcoming deadlines in the order they are due.' },
+  security:      { title: 'Security', subtitle: 'Password, two-factor authentication and active sessions.' },
+  reports:       { title: 'Reports', subtitle: 'Completion, workload, SLA and rating insights for the selected view.' },
+  sla:           { title: 'SLA Settings', subtitle: 'Service levels, escalation windows and category teams.' },
+  users:         { title: 'Users', subtitle: 'Accounts, roles, teams and access status.' },
+  audit:         { title: 'Audit Logs', subtitle: 'Append-only record of security and task activity.' },
+  monitor:       { title: 'Security Monitor', subtitle: 'Failed logins, IP blocks and open security flags.' }
+};
+
+function pageIntroHtml(key) {
+  const meta = PAGE_META[key];
+  if (!meta) return '';
+  const title = meta.title || navLabel(key);
+  const subtitle = (meta.subtitleByRole && meta.subtitleByRole[state.user.role]) || meta.subtitle;
+  return `<div class="page-intro">
+    <div><h2>${esc(title)}</h2><p>${esc(subtitle)}</p></div>
+  </div>`;
+}
 
 async function init() {
   let d;
@@ -84,21 +172,16 @@ function startSessionGuard() {
 }
 
 function nav() {
-  const canManage = ['administrator', 'coordinator'].includes(state.user.role);
-  const visible = NAV_ITEMS.filter(([key, label, group, adminOnly]) => {
-    if (adminOnly && state.user.role !== 'administrator') return false;
-    if (group === 'manage' && !canManage) return false;
-    return true;
-  });
+  const visible = NAV_ITEMS.filter(item => item.roles.includes(state.user.role));
 
   const groups = [['workspace', 'Workspace'], ['manage', 'Insights & Admin']];
   $('#nav').innerHTML = groups.map(([group, label]) => {
-    const items = visible.filter(x => x[2] === group);
+    const items = visible.filter(item => item.group === group);
     if (!items.length) return '';
-    return `<div class="nav-section">${label}</div>` + items.map(([key, text]) =>
-      `<button class="nav-btn ${state.page === key ? 'active' : ''}" data-page="${key}"${state.page === key ? ' aria-current="page"' : ''}>
-        <span class="nav-icon" aria-hidden="true">${ICONS[key] || ''}</span>
-        <span>${text}</span>
+    return `<div class="nav-section">${label}</div>` + items.map(item =>
+      `<button class="nav-btn ${state.page === item.key ? 'active' : ''}" data-page="${item.key}"${state.page === item.key ? ' aria-current="page"' : ''}>
+        <span class="nav-icon" aria-hidden="true">${ICONS[item.key] || ''}</span>
+        <span>${navLabel(item.key)}</span>
       </button>`).join('');
   }).join('');
 
@@ -123,6 +206,7 @@ function closeSidebar() {
 function setHeader(title, eyebrow = 'Workspace') { 
   if ($('#pageTitle')) $('#pageTitle').textContent = title;
   if ($('#pageEyebrow')) $('#pageEyebrow').textContent = eyebrow;
+  document.title = `${title} — TaskChain`;
 }
 
 function initAccount() {

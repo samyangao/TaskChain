@@ -1,6 +1,6 @@
 // --- Tasks ---
 async function tasksPage(c) {
-  setHeader('Tasks');
+  setHeader(navLabel('tasks'));
   const d = await api('/api/tasks');
   state.tasks = d.tasks;
   

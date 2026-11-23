@@ -87,6 +87,7 @@ async function refreshNotifViews() {
 async function refreshNotifPage(c = $('#content')) {
   const d = await api('/api/notifications');
   setNotifBadge(d.unread_count);
+  const intro = c.querySelector('.page-intro');
   c.innerHTML = `<div class="card">
     <div class="card-title">
       <h3>All notifications ${d.unread_count ? `<span class="badge badge-green">${d.unread_count} unread</span>` : ''}</h3>
@@ -94,6 +95,7 @@ async function refreshNotifPage(c = $('#content')) {
     </div>
     <div id="notifPageList">${d.notifications.length ? d.notifications.map(notifItemHtml).join('') : empty('You are all caught up.')}</div>
   </div>`;
+  if (intro) c.insertAdjacentHTML('afterbegin', intro.outerHTML);
   $('#readAll').onclick = () => markAllRead().catch(e => toast(e.message));
   bindNotifList($('#notifPageList'));
   await renderNotifPrefs(c);

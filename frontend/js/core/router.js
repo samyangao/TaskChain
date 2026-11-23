@@ -11,6 +11,13 @@ async function render() {
   }
   try {
     await renderPage();
+    const content = $('#content');
+    if (content) {
+      const intro = pageIntroHtml(state.page);
+      if (intro && !content.querySelector('.page-intro')) {
+        content.insertAdjacentHTML('afterbegin', intro);
+      }
+    }
     animateStatCounters($('#content'));
   } catch (e) {
     if (e.message === 'Authentication required') return;
@@ -25,6 +32,7 @@ async function render() {
 }
 
 async function renderPage() {
+  if (state.user && !isPageAllowed(state.page)) state.page = 'dashboard';
   nav();
   state.allTasksForWorkload = null;
   const c = $('#content');
