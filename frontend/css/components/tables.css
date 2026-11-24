@@ -36,6 +36,7 @@
   vertical-align: middle;
   color: var(--ink-soft);
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .table strong { color: var(--ink); font-weight: 700; }

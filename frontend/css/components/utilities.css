@@ -28,6 +28,7 @@
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--ink-soft);
+  overflow-wrap: anywhere;
 }
 .notice strong { color: var(--ink); font-weight: 700; }
 .notice + .notice { margin-top: 8px; }

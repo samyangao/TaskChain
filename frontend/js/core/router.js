@@ -5,18 +5,20 @@ let routeTimer = null;
 
 async function render() {
   const bar = $('#routeProgress');
+  const content = $('#content');
   if (bar) {
     clearTimeout(routeTimer);
     routeTimer = setTimeout(() => bar.classList.add('active'), 120);
   }
+  if (content) content.setAttribute('aria-busy', 'true');
   try {
     await renderPage();
-    const content = $('#content');
     if (content) {
       const intro = pageIntroHtml(state.page);
       if (intro && !content.querySelector('.page-intro')) {
         content.insertAdjacentHTML('afterbegin', intro);
       }
+      enhanceTables(content);
     }
     animateStatCounters($('#content'));
   } catch (e) {
@@ -24,6 +26,7 @@ async function render() {
     $('#content').innerHTML = `<div class="card"><div class="empty">Error loading page: ${esc(e.message)}</div></div>`;
     toast(e.message);
   } finally {
+    if (content) content.setAttribute('aria-busy', 'false');
     if (bar) {
       clearTimeout(routeTimer);
       bar.classList.remove('active');

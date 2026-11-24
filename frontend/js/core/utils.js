@@ -66,6 +66,10 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
+function enhanceTables(root = document) {
+  root.querySelectorAll('table th:not([scope])').forEach(th => th.setAttribute('scope', 'col'));
+}
+
 function animateStatCounters(root) {
   if (!root) return;
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;

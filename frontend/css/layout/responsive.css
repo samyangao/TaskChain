@@ -127,3 +127,42 @@
   .task-table { min-width: 0; }
   .task-table th:nth-child(6), .task-table td:nth-child(6) { display: none; }
 }
+
+/* -------------------------------------------------------------------------
+   Phase 8: modal, toolbar and workflow fit for 360-430 px and short screens
+   ------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .modal-backdrop { padding: 12px; }
+  .modal {
+    max-height: 92vh;
+    max-height: calc(100dvh - 24px);
+    padding: 16px;
+    overscroll-behavior: contain;
+  }
+  .modal-head { flex-wrap: wrap; }
+  .modal-head-actions { width: 100%; justify-content: flex-end; }
+  .modal-head h2 { overflow-wrap: anywhere; }
+  .task-tabs { margin-bottom: 12px; }
+  .workflow-step { flex-basis: 82px; }
+  .toolbar .select { flex: 1 1 calc(50% - 5px); }
+  .toolbar-check { flex: 1 1 100%; }
+  .notice,
+  .action-copy strong,
+  .action-copy small { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 480px) {
+  .modal-backdrop { padding: 8px; }
+  .modal { padding: 14px; }
+  .task-tab { padding: 8px 10px; font-size: 12px; }
+  .workflow-step { flex-basis: 76px; }
+}
+
+@media (max-height: 620px) {
+  .modal {
+    max-height: 94vh;
+    max-height: calc(100dvh - 16px);
+    padding: 16px;
+  }
+  .modal-head { margin-bottom: 12px; }
+}
