@@ -200,7 +200,9 @@ async function openTask(id, initialTab = 'overview') {
     const evidenceHtml = `
       <h3>Request attachments <span class="muted small">${(d.attachments || []).length}</span></h3>
       ${(d.attachments || []).length ? `<div class="notice small">${attachmentLinks(d.attachments)}</div>` : empty('No files were attached to the request.')}
-      <div class="small muted" style="margin-top:10px">Files attached to handovers are listed in the Handover tab.</div>`;
+      <div class="small muted" style="margin-top:10px">Files attached to handovers are listed in the Handover tab.</div>
+      ${t.status === 'for_verification' && ['administrator', 'coordinator', 'verifier'].includes(state.user.role) ? `<div class="notice next-action"><strong>Ready for your decision.</strong> Review the files above, then approve the completion or reject it with a reason.
+        <div class="form-actions"><button class="btn primary" id="detailVerifyApprove">Approve completion</button><button class="btn danger" id="detailVerifyReject">Reject…</button></div></div>` : ''}`;
 
     const commentsPanelHtml = `
       ${commentsHtml(d)}
@@ -380,6 +382,10 @@ async function openTask(id, initialTab = 'overview') {
       catch (e) { toast(e.message); }
     };
     if (isManager() && canAssign) loadAssignPanel(m, t, id, reopen);
+    const detailApprove = m.querySelector('#detailVerifyApprove');
+    if (detailApprove) detailApprove.onclick = () => verificationDecisionModal(t, 'approve', () => { m.remove(); render(); });
+    const detailReject = m.querySelector('#detailVerifyReject');
+    if (detailReject) detailReject.onclick = () => verificationDecisionModal(t, 'reject', () => { m.remove(); render(); });
     const vc = m.querySelector('#verifyChainBtn');
     if (vc) vc.onclick = async () => {
       const slot = m.querySelector('#chainStatus');
