@@ -1,6 +1,87 @@
 /* ============ Chain Workflow Visualizer ============ */
 .chain { display: flex; flex-direction: column; gap: 0; }
 
+/* Request progress: display-only stages grouped from the real status enum. */
+.task-workflow { margin: 14px 0 4px; }
+.workflow-steps {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.workflow-steps::-webkit-scrollbar { display: none; }
+.workflow-step {
+  position: relative;
+  flex: 1 0 88px;
+  padding: 30px 6px 0;
+  text-align: center;
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--ink-faint);
+}
+.workflow-step::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: var(--line);
+}
+.workflow-step:first-child::before { display: none; }
+.workflow-step.done::before,
+.workflow-step.current::before { background: var(--accent-dim); }
+.workflow-node {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bg-panel-raised);
+  border: 2px solid var(--line);
+  color: var(--ink-faint);
+  font-size: 10px;
+  font-weight: 800;
+}
+.workflow-step.done .workflow-node {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+.workflow-step.current { color: var(--accent-bright); font-weight: 700; }
+.workflow-step.current .workflow-node {
+  border-color: var(--accent-bright);
+  color: var(--accent-bright);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.workflow-step.current.amber { color: var(--status-amber-ink); }
+.workflow-step.current.amber .workflow-node {
+  border-color: var(--status-amber-ink);
+  color: var(--status-amber-ink);
+  box-shadow: 0 0 0 4px var(--status-amber-bg);
+}
+.workflow-step.current.red { color: var(--status-red-ink); }
+.workflow-step.current.red .workflow-node {
+  border-color: var(--status-red-ink);
+  color: var(--status-red-ink);
+  box-shadow: 0 0 0 4px var(--status-red-bg);
+}
+.workflow-step.skipped { color: var(--ink-faint); }
+.workflow-step.skipped .workflow-node {
+  background: var(--bg-panel);
+  border-color: var(--line);
+  color: var(--ink-faint);
+}
+.workflow-copy strong { display: block; font-size: 10.5px; }
+.workflow-copy small { display: block; margin-top: 2px; color: var(--ink-faint); font-size: 9.5px; font-weight: 400; }
+
 .chain-step {
   display: flex;
   gap: 16px;

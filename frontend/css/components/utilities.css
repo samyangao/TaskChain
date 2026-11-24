@@ -47,6 +47,19 @@
 .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; align-items: center; }
 .toolbar .input.search { flex: 1 1 280px; width: auto; }
 .toolbar .select { width: auto; min-width: 180px; }
+.toolbar-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 2px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.toolbar-check input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+.toolbar-meta { margin: -8px 0 10px; }
 
 /* Forms (new request, modals) */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }

@@ -9,6 +9,124 @@ const NEXT = {
   for_verification: [], verified: [], completed: [], cancelled: []
 };
 
+// Display-only workflow stages. They group the real backend statuses and never
+// add or rename a status. "waiting", "overdue" and "rejected" are shown as the
+// current state of the work stage.
+const WORKFLOW_STAGES = [
+  { key: 'submitted', label: 'Submitted' },
+  { key: 'under_review', label: 'Review' },
+  { key: 'assigned', label: 'Assigned' },
+  { key: 'accepted', label: 'Accepted' },
+  { key: 'in_progress', label: 'In Progress' },
+  { key: 'handover', label: 'Handover' },
+  { key: 'for_verification', label: 'Verification' },
+  { key: 'completed', label: 'Completed' }
+];
+
+function workflowStageIndex(status) {
+  if (status === 'cancelled') return -1;
+  if (status === 'submitted') return 0;
+  if (status === 'under_review') return 1;
+  if (status === 'assigned') return 2;
+  if (status === 'accepted') return 3;
+  if (['in_progress', 'waiting', 'overdue', 'rejected'].includes(status)) return 4;
+  if (status === 'handover') return 5;
+  if (status === 'for_verification') return 6;
+  if (['completed', 'verified'].includes(status)) return 7;
+  return 0;
+}
+
+function workflowStageTime(t, chain, key) {
+  if (key === 'submitted') return t.created_at;
+  if (key === 'accepted' && t.accepted_at) return t.accepted_at;
+  if (key === 'completed' && (t.completed_at || t.confirmed_at)) return t.completed_at || t.confirmed_at;
+
+  const statusEvent = (chain || []).find(c =>
+    c.event_type === 'status_changed' && c.event_data && c.event_data.to_status === key
+  );
+  if (statusEvent) return statusEvent.event_timestamp;
+
+  if (key === 'overdue') {
+    const overdue = (chain || []).find(c => c.event_type === 'task_overdue');
+    if (overdue) return overdue.event_timestamp;
+  }
+  if (key === 'accepted') {
+    const accepted = (chain || []).find(c => c.event_type === 'task_accepted');
+    if (accepted) return accepted.event_timestamp;
+  }
+  if (key === 'handover') {
+    const handover = (chain || []).find(c => c.event_type === 'handover_created');
+    if (handover) return handover.event_timestamp;
+  }
+  if (key === 'completed') {
+    const completed = (chain || []).find(c => ['task_verified', 'task_completed', 'task_confirmed'].includes(c.event_type));
+    if (completed) return completed.event_timestamp;
+  }
+  return null;
+}
+
+function workflowTimelineHtml(t, chain, hasHandover = false) {
+  if (t.status === 'cancelled') {
+    return `<div class="notice cancelled-notice"><strong>Request cancelled.</strong> This request is no longer moving through the workflow.</div>`;
+  }
+
+  const current = workflowStageIndex(t.status);
+  const tone = { waiting: 'amber', overdue: 'red', rejected: 'red' }[t.status] || '';
+  return `<div class="task-workflow" role="group" aria-label="Request progress">
+    <ol class="workflow-steps">
+      ${WORKFLOW_STAGES.map((stage, index) => {
+        let state = index < current ? 'done' : index === current ? 'current' : 'pending';
+        if (stage.key === 'handover' && index < current && !hasHandover) state = 'skipped';
+        const label = state === 'current' ? statusLabel(t.status) : stage.label;
+        const timeKey = state === 'current' && ['waiting', 'overdue', 'rejected'].includes(t.status) ? t.status : stage.key;
+        const time = state === 'done' || state === 'current' ? workflowStageTime(t, chain, timeKey) : null;
+        return `<li class="workflow-step ${state}${state === 'current' && tone ? ' ' + tone : ''}"${state === 'current' ? ' aria-current="step"' : ''}>
+          <span class="workflow-node" aria-hidden="true">${state === 'done' ? '✓' : state === 'skipped' ? '–' : index + 1}</span>
+          <span class="workflow-copy"><strong>${esc(label)}</strong>${time ? `<small>${fmt(time)}</small>` : state === 'skipped' ? '<small>Not used</small>' : state === 'current' ? '<small>Current</small>' : ''}</span>
+        </li>`;
+      }).join('')}
+    </ol>
+  </div>`;
+}
+
+function nextActionText(t, pendingHandover) {
+  const isRequester = t.created_by === state.user.id;
+  if (pendingHandover) return 'A handover is waiting for your acknowledgment. Review the checklist, then acknowledge or decline it.';
+  if (t.status === 'completed' && !t.confirmed_at) {
+    return isRequester
+      ? 'The work is finished. Confirm completion, or reopen the request if something is not right.'
+      : 'Waiting for the requester to confirm or reopen the completed work.';
+  }
+  if (t.status === 'completed') {
+    return isRequester ? 'Nothing is required. You can rate this request if you have not already.' : 'This request is complete.';
+  }
+  if (t.status === 'cancelled') return 'This request was cancelled. No further action is required.';
+  if (t.status === 'for_verification') {
+    return ['verifier', 'coordinator', 'administrator'].includes(state.user.role)
+      ? 'Review the evidence and completion notes, then approve or reject the work.'
+      : 'The completed work is waiting for verification. No action is required from you.';
+  }
+  if (t.status === 'assigned' && t.assigned_to === state.user.id && !t.accepted_at) {
+    return 'Accept or decline this assignment so the coordinator knows you can take it.';
+  }
+  if (isManager() && !t.assigned_to && ['submitted', 'under_review', 'overdue'].includes(t.status)) {
+    return 'Assign this request to personnel so work can start.';
+  }
+  if (isManager() && t.status === 'overdue') return 'Follow up on this overdue request or reassign it.';
+  if (t.status === 'overdue') return 'This request is past its expected date. The team has been notified.';
+  if (t.status === 'rejected') return 'Review the rejection reason, then resume work when the issue is resolved.';
+  if (t.status === 'waiting') return 'Work is paused until the blocker is cleared. Resume it when ready.';
+  if (t.status === 'handover') return 'The handover is waiting for the recipient to acknowledge it.';
+  if (t.status === 'in_progress' || t.status === 'accepted') {
+    return isRequester
+      ? 'The team is working on your request. You will be notified when your confirmation is needed.'
+      : 'Continue the work, then send a handover or submit it for verification.';
+  }
+  return isRequester
+    ? 'The team has your request. You will be notified when your confirmation is needed.'
+    : 'Monitor this request for the next update.';
+}
+
 function openModal(html, wide) {
   const m = document.createElement('div');
   m.className = 'modal-backdrop show';
@@ -18,7 +136,7 @@ function openModal(html, wide) {
   return m;
 }
 
-async function openTask(id) {
+async function openTask(id, initialTab = 'overview') {
   try {
     const d = await api('/api/tasks/' + id);
     const t = d.task;
@@ -30,6 +148,78 @@ async function openTask(id) {
     // accepting and handing over have their own buttons / form, so they are not generic status steps
     const stepButtons = (NEXT[t.status] || []).filter(s => s !== 'accepted' && s !== 'handover');
     const blockedStep = s => d.blocked && !['submitted', 'under_review', 'assigned', 'cancelled', 'rejected'].includes(s);
+    const chain = d.chain || [];
+    const tabButtons = [
+      ['overview', 'Overview'],
+      ['details', 'Details'],
+      ['handover', `Handover${(d.handovers || []).length ? ` (${(d.handovers || []).length})` : ''}`],
+      ['evidence', `Evidence${(d.attachments || []).length ? ` (${(d.attachments || []).length})` : ''}`],
+      ['comments', `Comments${(d.comments || []).length ? ` (${(d.comments || []).length})` : ''}`],
+      ['chain', 'Task Chain'],
+      ['history', 'History']
+    ];
+    let activeTab = tabButtons.some(([key]) => key === initialTab) ? initialTab : 'overview';
+    const panel = (key, content) => `<section class="task-tab-panel" id="taskPanel-${key}" role="tabpanel" aria-labelledby="taskTab-${key}"${key === activeTab ? '' : ' hidden'}>${content}</section>`;
+
+    const overviewHtml = `
+      <div class="notice task-summary">${badge(t.status)} <span class="priority-${esc(t.priority)}">${esc(t.priority)}</span>
+        · ${esc(t.category)} · Due ${fmt(t.due_at)} ${slaChip(t.sla_state)}<br>
+        <span class="muted">Requester: ${esc(t.requester)} · Responsible: ${esc(t.assignee || 'Unassigned')}</span>
+        ${t.sla_due_at ? `<br><span class="muted small">SLA: due ${fmt(t.sla_due_at)} · escalates to coordinators ${fmt(t.sla_escalate_at)}${t.deadline ? ` · requester preferred ${fmt(t.deadline)}` : ''}</span>`
+          : (t.deadline ? `<br><span class="muted small">No SLA for this category · requester preferred ${fmt(t.deadline)}</span>` : '')}
+        ${t.location ? `<br><span class="muted">Location: ${esc(t.location)}</span>` : ''}</div>
+      <div class="notice task-description">${esc(t.description || 'No description.')}</div>
+      ${d.blocked ? `<div class="notice blocked-notice"><strong>Blocked by dependencies.</strong> ${d.dependencies.filter(x => !x.met).map(x => `${esc(x.task_code)} (${esc(depStateLabel(x.required_state))})`).join(', ')}. This task cannot start, resume, be submitted for verification, or be completed until those tasks are done.</div>` : ''}
+      ${workflowTimelineHtml(t, chain, (d.handovers || []).length > 0)}
+      <div class="notice next-action"><strong>What happens next:</strong> ${esc(nextActionText(t, pendingHO))}</div>
+      ${completionHtml(d, t.created_by === state.user.id)}
+      ${pendingHO ? `<div class="notice ho-pending"><strong>A handover is waiting for your acknowledgment</strong>
+        ${handoverDetailHtml(pendingHO)}
+        ${(() => { const p = pendingHO.items.filter(i => i.state === 'pending').length, b = pendingHO.items.filter(i => i.state === 'blocked').length;
+          return (p || b) ? `<div class="small">Heads-up: ${p} item${p === 1 ? '' : 's'} still pending${b ? `, ${b} blocked` : ''}. You take custody of the task when you acknowledge.</div>` : ''; })()}
+        <div class="form-actions"><button class="btn primary" id="ackBtn">Acknowledge handover</button><button class="btn" id="declineBtn">Decline</button></div></div>` : ''}
+      ${canRespond ? `<div class="notice"><strong>This task is assigned to you.</strong>
+        <div class="form-actions"><button class="btn primary" id="acceptBtn">Accept</button><button class="btn" id="declineBtn">Decline</button></div></div>` : ''}
+      ${canAct && stepButtons.length ? `<div class="form-actions">
+        ${stepButtons.map(s => `<button class="btn" data-status="${s}" ${blockedStep(s) ? 'disabled title="Blocked by dependencies"' : ''}>${statusLabel(s)}</button>`).join('')}</div>` : ''}
+      ${isManager() && canAssign ? `<div class="notice" id="assignPanel"><strong>${t.assigned_to ? 'Reassign' : 'Assign'}</strong><div class="muted small">Loading suggestions…</div></div>` : ''}
+      ${(canHandOver || (isManager() && canAct && !['verified'].includes(t.status))) ? `<div class="form-actions">
+        ${canHandOver ? '<button class="btn" id="handoverBtn">Hand over task…</button>' : ''}
+        ${isManager() && canAct && !['verified'].includes(t.status) ? '<button class="btn" id="escalateBtn">Escalate to administrators</button>' : ''}</div>` : ''}`;
+
+    const detailsHtml = `
+      ${subtaskSectionHtml(d, t, canEditCollab(t))}
+      ${dependencySectionHtml(d, t, canEditCollab(t))}`;
+
+    const handoverHtml = `
+      <h3>Time in custody</h3>
+      ${custodyHtml(d.custody)}
+      <h3>Handovers</h3>
+      ${(d.handovers || []).length ? d.handovers.slice().reverse().map(handoverDetailHtml).join('') : empty('This task has not been handed over.')}`;
+
+    const evidenceHtml = `
+      <h3>Request attachments <span class="muted small">${(d.attachments || []).length}</span></h3>
+      ${(d.attachments || []).length ? `<div class="notice small">${attachmentLinks(d.attachments)}</div>` : empty('No files were attached to the request.')}
+      <div class="small muted" style="margin-top:10px">Files attached to handovers are listed in the Handover tab.</div>`;
+
+    const commentsPanelHtml = `
+      ${commentsHtml(d)}
+      ${watchersHtml(d)}`;
+
+    const chainHtml = `
+      <h3>Custody chain <span class="muted small">(${chain.length} records)</span></h3>
+      <div id="chainStatus" aria-live="polite"></div>
+      <div class="timeline">${chain.map(c => `<div class="timeline-item"><div class="timeline-time">${fmt(c.event_timestamp)}</div>
+        <div class="timeline-body"><strong>#${c.sequence_number} ${esc(statusLabel(c.event_type))}</strong>
+        <p class="muted small">${esc(c.actor_name || 'System')}</p></div></div>`).join('') || empty('No chain records.')}</div>
+      ${state.user.role === 'administrator' ? `<div class="form-actions">
+        <button class="btn" id="verifyChainBtn">Verify chain</button><button class="btn" id="reportBtn">Custody report</button></div>` : ''}`;
+
+    const historyHtml = `
+      <h3>Assignment history</h3>
+      ${(d.assignment_history || []).length ? `<div class="timeline">${d.assignment_history.map(h => `<div class="timeline-item"><div class="timeline-time">${fmt(h.created_at)}</div>
+        <div class="timeline-body"><strong>${esc(historyText(h))}</strong>${h.reason ? `<p class="muted small">Reason: ${esc(h.reason)}</p>` : ''}</div></div>`).join('')}</div>` : empty('No assignment activity yet.')}`;
+
     const m = openModal(`
       <div class="modal-head">
         <div><div class="eyebrow">${esc(t.task_code)}</div><h2>${esc(t.title)}</h2></div>
@@ -38,51 +228,44 @@ async function openTask(id) {
           <button class="modal-close">×</button>
         </div>
       </div>
-      <div class="grid" style="gap:10px">
-        <div class="notice">${badge(t.status)} <span class="priority-${esc(t.priority)}">${esc(t.priority)}</span>
-          · ${esc(t.category)} · Due ${fmt(t.due_at)} ${slaChip(t.sla_state)}<br>
-          <span class="muted">Requester: ${esc(t.requester)} · Responsible: ${esc(t.assignee || 'Unassigned')}</span>
-          ${t.sla_due_at ? `<br><span class="muted small">SLA: due ${fmt(t.sla_due_at)} · escalates to coordinators ${fmt(t.sla_escalate_at)}${t.deadline ? ` · requester preferred ${fmt(t.deadline)}` : ''}</span>`
-            : (t.deadline ? `<br><span class="muted small">No SLA for this category · requester preferred ${fmt(t.deadline)}</span>` : '')}
-          ${t.location ? `<br><span class="muted">Location: ${esc(t.location)}</span>` : ''}</div>
-        <div class="notice">${esc(t.description || 'No description.')}</div>
-        ${d.blocked ? `<div class="notice blocked-notice"><strong>Blocked by dependencies.</strong> ${d.dependencies.filter(x => !x.met).map(x => `${esc(x.task_code)} (${esc(depStateLabel(x.required_state))})`).join(', ')}. This task cannot start, resume, be submitted for verification, or be completed until those tasks are done.</div>` : ''}
-        ${(d.attachments || []).length ? `<div class="notice small"><strong>Attachments:</strong> ${attachmentLinks(d.attachments)}</div>` : ''}
-        ${subtaskSectionHtml(d, t, canEditCollab(t))}
-        ${dependencySectionHtml(d, t, canEditCollab(t))}
-        ${completionHtml(d, t.created_by === state.user.id)}
-        ${pendingHO ? `<div class="notice ho-pending"><strong>A handover is waiting for your acknowledgment</strong>
-          ${handoverDetailHtml(pendingHO)}
-          ${(() => { const p = pendingHO.items.filter(i => i.state === 'pending').length, b = pendingHO.items.filter(i => i.state === 'blocked').length;
-            return (p || b) ? `<div class="small">Heads-up: ${p} item${p === 1 ? '' : 's'} still pending${b ? `, ${b} blocked` : ''}. You take custody of the task when you acknowledge.</div>` : ''; })()}
-          <div class="form-actions"><button class="btn primary" id="ackBtn">Acknowledge handover</button><button class="btn" id="declineBtn">Decline</button></div></div>` : ''}
-        ${canRespond ? `<div class="notice"><strong>This task is assigned to you.</strong>
-          <div class="form-actions"><button class="btn primary" id="acceptBtn">Accept</button><button class="btn" id="declineBtn">Decline</button></div></div>` : ''}
-        ${canAct && stepButtons.length ? `<div class="form-actions">
-          ${stepButtons.map(s => `<button class="btn" data-status="${s}" ${blockedStep(s) ? 'disabled title="Blocked by dependencies"' : ''}>${statusLabel(s)}</button>`).join('')}</div>` : ''}
-        ${isManager() && canAssign ? `<div class="notice" id="assignPanel"><strong>${t.assigned_to ? 'Reassign' : 'Assign'}</strong><div class="muted small">Loading suggestions…</div></div>` : ''}
-        ${(canHandOver || (isManager() && canAct && !['verified'].includes(t.status))) ? `<div class="form-actions">
-          ${canHandOver ? '<button class="btn" id="handoverBtn">Hand over task…</button>' : ''}
-          ${isManager() && canAct && !['verified'].includes(t.status) ? '<button class="btn" id="escalateBtn">Escalate to administrators</button>' : ''}</div>` : ''}
-        <h3>Time in custody</h3>
-        ${custodyHtml(d.custody)}
-        <h3>Handovers</h3>
-        ${(d.handovers || []).length ? d.handovers.slice().reverse().map(handoverDetailHtml).join('') : empty('This task has not been handed over.')}
-        <h3>Assignment history</h3>
-        ${d.assignment_history.length ? `<div class="timeline">${d.assignment_history.map(h => `<div class="timeline-item"><div class="timeline-time">${fmt(h.created_at)}</div>
-          <div class="timeline-body"><strong>${esc(historyText(h))}</strong>${h.reason ? `<p class="muted small">Reason: ${esc(h.reason)}</p>` : ''}</div></div>`).join('')}</div>` : empty('No assignment activity yet.')}
-        ${commentsHtml(d)}
-        ${watchersHtml(d)}
-        <h3>Custody chain <span class="muted small">(${d.chain.length} records)</span></h3>
-        <div id="chainStatus" aria-live="polite"></div>
-        <div class="timeline">${d.chain.map(c => `<div class="timeline-item"><div class="timeline-time">${fmt(c.event_timestamp)}</div>
-          <div class="timeline-body"><strong>#${c.sequence_number} ${esc(statusLabel(c.event_type))}</strong>
-          <p class="muted small">${esc(c.actor_name || 'System')}</p></div></div>`).join('') || empty('No chain records.')}</div>
-        ${state.user.role === 'administrator' ? `<div class="form-actions">
-          <button class="btn" id="verifyChainBtn">Verify chain</button><button class="btn" id="reportBtn">Custody report</button></div>` : ''}
+      <div class="task-tabs" role="tablist" aria-label="Task sections">
+        ${tabButtons.map(([key, label]) => `<button type="button" class="task-tab${key === activeTab ? ' active' : ''}" id="taskTab-${key}" role="tab" aria-selected="${key === activeTab}" aria-controls="taskPanel-${key}" data-tab="${key}">${label}</button>`).join('')}
+      </div>
+      <div class="task-tab-panels">
+        ${panel('overview', overviewHtml)}
+        ${panel('details', detailsHtml)}
+        ${panel('handover', handoverHtml)}
+        ${panel('evidence', evidenceHtml)}
+        ${panel('comments', commentsPanelHtml)}
+        ${panel('chain', chainHtml)}
+        ${panel('history', historyHtml)}
       </div>`, true);
 
-    const reopen = () => { m.remove(); openTask(id); if (state.page !== 'dashboard') render(); };
+    m.querySelectorAll('[data-tab]').forEach(tab => {
+      tab.onclick = () => {
+        activeTab = tab.dataset.tab;
+        m.querySelectorAll('[data-tab]').forEach(item => {
+          const active = item === tab;
+          item.classList.toggle('active', active);
+          item.setAttribute('aria-selected', String(active));
+        });
+        m.querySelectorAll('.task-tab-panel').forEach(panel => {
+          panel.hidden = panel.id !== `taskPanel-${tab.dataset.tab}`;
+        });
+      };
+      tab.onkeydown = e => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+        e.preventDefault();
+        const tabs = [...m.querySelectorAll('[data-tab]')];
+        const index = tabs.indexOf(tab);
+        const next = e.key === 'Home' ? tabs[0] : e.key === 'End' ? tabs[tabs.length - 1]
+          : tabs[(index + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+        next.focus();
+        next.click();
+      };
+    });
+
+    const reopen = () => { m.remove(); openTask(id, activeTab); if (state.page !== 'dashboard') render(); };
     m.querySelectorAll('[data-status]').forEach(b => b.onclick = async () => {
       try { await api('/api/tasks/' + id, { method: 'PATCH', body: JSON.stringify({ status: b.dataset.status }) }); toast('Status updated.'); reopen(); }
       catch (e) { toast(e.message); }

@@ -31,6 +31,47 @@
 .modal-head h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); }
 .modal .eyebrow { margin-bottom: 3px; }
 
+/* Task detail tabs */
+.task-tabs {
+  display: flex;
+  gap: 2px;
+  margin: 0 0 16px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.task-tabs::-webkit-scrollbar { display: none; }
+.task-tab {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-faint);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.task-tab:hover { color: var(--ink); }
+.task-tab.active { color: var(--accent-bright); border-bottom-color: var(--accent); }
+.task-tab:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: -2px; }
+.task-tab-panel[hidden] { display: none; }
+.task-tab-panel > * + * { margin-top: 12px; }
+.task-tab-panel > h3:first-child { margin-top: 0; }
+
+/* The next-action line is the single most important sentence in the detail. */
+.next-action {
+  border-left-color: var(--status-amber-ink);
+  background: linear-gradient(90deg, var(--status-amber-bg), transparent 70%), var(--bg-panel-raised);
+}
+.next-action strong { color: var(--status-amber-ink); }
+.task-summary,
+.task-description { border-left-color: var(--line-strong); background: var(--bg-panel-raised); }
+.cancelled-notice { border-left-color: var(--status-gray-ink); }
+
 .modal h3 {
   display: flex;
   align-items: center;
