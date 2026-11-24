@@ -388,7 +388,7 @@ async function verifierDashboard(c, d) {
     <div class="grid stats">
       <div class="stat attention"><div class="stat-icon" aria-hidden="true">${ICONS.verification}</div><div class="label">Awaiting review</div><div class="num">${awaiting.length}</div><div class="sub">Ready for sign-off</div></div>
       <div class="stat overdue"><div class="stat-icon" aria-hidden="true">${ICONS.sla}</div><div class="label">Oldest waiting</div><div class="num">${esc(oldestLabel)}</div><div class="sub">Longest in queue</div></div>
-      <div class="stat completed"><div class="stat-icon" aria-hidden="true">${ICONS.done}</div><div class="label">Verified</div><div class="num">${verified.length}</div><div class="sub">Signed off</div></div>
+      <div class="stat completed"><div class="stat-icon" aria-hidden="true">${ICONS.done}</div><div class="label">Verified records</div><div class="num">${verified.length}</div><div class="sub">Marked verified</div></div>
       <div class="stat"><div class="stat-icon" aria-hidden="true">${ICONS.total}</div><div class="label">Queue total</div><div class="num">${tasks.length}</div><div class="sub">Current and recent</div></div>
     </div>
     <div class="grid two">
@@ -407,7 +407,7 @@ async function verifierDashboard(c, d) {
       </div>
       <div class="card">
         <div class="card-title"><h3>Recently verified</h3><button class="btn small" id="dashQueue2">View all</button></div>
-        ${verified.length ? taskTable(verified.slice(0, 5)) : empty('No verified requests yet.')}
+        ${verified.length ? taskTable(verified.slice(0, 5)) : empty('Approved requests move to Completed and leave this queue.')}
       </div>
     </div>`;
 

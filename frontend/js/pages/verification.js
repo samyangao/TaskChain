@@ -18,7 +18,7 @@ async function verificationPage(c) {
     <div class="grid stats">
       <div class="stat attention"><div class="stat-icon" aria-hidden="true">${ICONS.verification}</div><div class="label">Awaiting review</div><div class="num">${awaiting.length}</div><div class="sub">Ready for sign-off</div></div>
       <div class="stat overdue"><div class="stat-icon" aria-hidden="true">${ICONS.sla}</div><div class="label">Oldest waiting</div><div class="num">${esc(oldestLabel)}</div><div class="sub">Longest in queue</div></div>
-      <div class="stat completed"><div class="stat-icon" aria-hidden="true">${ICONS.done}</div><div class="label">Verified</div><div class="num">${verified.length}</div><div class="sub">Signed off</div></div>
+      <div class="stat completed"><div class="stat-icon" aria-hidden="true">${ICONS.done}</div><div class="label">Verified records</div><div class="num">${verified.length}</div><div class="sub">Marked verified</div></div>
       <div class="stat"><div class="stat-icon" aria-hidden="true">${ICONS.total}</div><div class="label">Queue total</div><div class="num">${d.tasks.length}</div><div class="sub">Current and recent</div></div>
     </div>
 
@@ -38,6 +38,8 @@ async function verificationPage(c) {
           </div>
         </div>`).join('')}</div>` : empty('Nothing awaiting verification.')}
     </div>
+
+    <div class="small muted" style="margin-top:10px">Approved requests move to Completed and leave this queue.</div>
 
     ${verified.length ? `<div class="card">
       <div class="card-title"><h3>Recently verified</h3><span class="small muted">${verified.length}</span></div>
