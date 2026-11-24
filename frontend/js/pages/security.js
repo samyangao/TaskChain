@@ -21,7 +21,11 @@ async function securityPage(c) {
         }</tbody></table></div>`
       : empty('No login attempts recorded yet.');
     adminHtml = `
-      <div class="grid stats" style="margin-top:18px">
+      <div class="section-heading">
+        <div><div class="eyebrow">Administrator view</div><h3>System security</h3><p class="muted small">Login attempts, locked accounts and recent security activity across all accounts.</p></div>
+        <button class="btn small" id="openMonitorFromSecurity">Open security monitor</button>
+      </div>
+      <div class="grid stats">
         <div class="stat"><div class="label">Failed logins (24h)</div><div class="num">${failed24}</div></div>
         <div class="stat"><div class="label">Locked accounts now</div><div class="num">${adminData.locked_accounts.length}</div></div>
         <div class="stat"><div class="label">Recent attempts shown</div><div class="num">${adminData.attempts.length}</div></div>
@@ -30,6 +34,9 @@ async function securityPage(c) {
       <div class="card" style="margin-top:18px"><div class="card-title"><h3>Recent login attempts</h3><span class="muted small">Administrator view</span></div>${attemptsHtml}</div>`;
   }
   c.innerHTML = `
+    <div class="section-heading">
+      <div><div class="eyebrow">Your account</div><h3>Account security</h3><p class="muted small">Password, two-factor authentication and session controls for your own account.</p></div>
+    </div>
     <div class="security-grid">
       <div class="card security-card">
         <div class="security-card-head"><div class="security-icon">${ICONS.security}</div><div><h3>Password</h3><p class="muted small">Change the password used to sign in.</p></div></div>
@@ -50,6 +57,8 @@ async function securityPage(c) {
     <div class="notice security-note"><strong>Security tip.</strong> Use a unique password and keep your authenticator app on a device you control. If you suspect someone else has access, change your password and sign out everywhere.</div>
     ${adminHtml}`;
   c.querySelector('#changePasswordBtn').onclick = () => changePasswordModal();
+  const monitorBtn = c.querySelector('#openMonitorFromSecurity');
+  if (monitorBtn) monitorBtn.onclick = () => { state.page = 'monitor'; render(); };
   c.querySelector('#totpBtn').onclick = () => totpOn ? totpDisableModal() : totpSetupModal();
   c.querySelector('#signOutEverywhereBtn').onclick = async () => {
     if (!confirm('Sign out of TaskChain on every device? You will need to sign in again.')) return;

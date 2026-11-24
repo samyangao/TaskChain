@@ -6,6 +6,7 @@ async function dashboard(c) {
   if (state.user.role === 'coordinator') return coordinatorDashboard(c, d);
   if (state.user.role === 'personnel') return personnelDashboard(c, d);
   if (state.user.role === 'verifier') return verifierDashboard(c, d);
+  if (state.user.role === 'administrator') return administratorDashboard(c, d);
 
   const s = d.summary;
 
@@ -424,4 +425,78 @@ async function verifierDashboard(c, d) {
     };
   });
   bindDashboardTaskLinks(c);
+}
+
+async function administratorDashboard(c, d) {
+  const [usersData, auditData, security] = await Promise.all([
+    api('/api/users').catch(() => null),
+    api('/api/audit-logs').catch(() => null),
+    api('/api/admin/security/summary').catch(() => null)
+  ]);
+  const users = usersData?.users || [];
+  const logs = auditData?.logs || [];
+  const cards = security?.cards || {};
+  const flags = security?.flags || [];
+  const activeUsers = users.filter(u => u.is_active).length;
+  const s = d.summary;
+  const metricMax = Math.max(
+    1,
+    Number(cards.loginsSuccess || 0),
+    Number(cards.loginsFailed || 0),
+    Number(cards.otpSent || 0),
+    Number(cards.alertsSent || 0)
+  );
+  const barWidth = value => value ? Math.max(4, Math.round(Number(value) / metricMax * 100)) : 4;
+
+  c.innerHTML = `
+    ${dashboardIntro('System health, security and management shortcuts.',
+      '<button class="btn" id="adminRequests">View requests</button><button class="btn" id="adminMonitor">Security monitor</button>')}
+    <div class="grid stats">
+      <div class="stat"><div class="stat-icon" aria-hidden="true">${ICONS.users}</div><div class="label">Users</div><div class="num">${users.length}</div><div class="sub">${activeUsers} active</div></div>
+      <div class="stat overdue"><div class="stat-icon" aria-hidden="true">${ICONS.security}</div><div class="label">Locked accounts</div><div class="num">${esc(cards.accountsLocked ?? '—')}</div><div class="sub">Current lockouts</div></div>
+      <div class="stat attention"><div class="stat-icon" aria-hidden="true">${ICONS.notifications}</div><div class="label">Failed logins · today</div><div class="num">${esc(cards.loginsFailed ?? '—')}</div><div class="sub">Across all accounts</div></div>
+      <div class="stat"><div class="stat-icon" aria-hidden="true">${ICONS.monitor}</div><div class="label">Security flags</div><div class="num">${flags.length}</div><div class="sub">From the monitor sweep</div></div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <div class="card-title"><h3>Manage</h3><span class="small muted">Organized admin sections</span></div>
+        <div class="action-list">
+          <div class="action-item"><div class="action-icon green" aria-hidden="true">${ICONS.users}</div><div class="action-copy"><strong>Users &amp; roles</strong><small>Accounts, role changes, lock / unlock and teams</small></div><button class="btn small" data-admin-page="users">Open</button></div>
+          <div class="action-item"><div class="action-icon blue" aria-hidden="true">${ICONS.audit}</div><div class="action-copy"><strong>Audit logs</strong><small>Append-only record of security and task activity</small></div><button class="btn small" data-admin-page="audit">Open</button></div>
+          <div class="action-item"><div class="action-icon amber" aria-hidden="true">${ICONS.sla}</div><div class="action-copy"><strong>SLA &amp; categories</strong><small>Deadlines, escalation windows and category teams</small></div><button class="btn small" data-admin-page="sla">Open</button></div>
+          <div class="action-item"><div class="action-icon blue" aria-hidden="true">${ICONS.reports}</div><div class="action-copy"><strong>Reports</strong><small>Workload, SLA compliance, ratings and exports</small></div><button class="btn small" data-admin-page="reports">Open</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><h3>Security snapshot</h3><span class="small muted">Today</span></div>
+        <div class="bar-list">
+          <div class="bar-row"><span>Successful logins</span><div class="bar"><i style="width:${barWidth(cards.loginsSuccess)}%"></i></div><b>${esc(cards.loginsSuccess ?? '—')}</b></div>
+          <div class="bar-row"><span>Failed logins</span><div class="bar"><i style="width:${barWidth(cards.loginsFailed)}%"></i></div><b>${esc(cards.loginsFailed ?? '—')}</b></div>
+          <div class="bar-row"><span>OTPs sent</span><div class="bar"><i style="width:${barWidth(cards.otpSent)}%"></i></div><b>${esc(cards.otpSent ?? '—')}</b></div>
+          <div class="bar-row"><span>Alert emails</span><div class="bar"><i style="width:${barWidth(cards.alertsSent)}%"></i></div><b>${esc(cards.alertsSent ?? '—')}</b></div>
+        </div>
+        <div class="form-actions" style="justify-content:flex-start;margin-top:14px"><button class="btn small" data-admin-page="monitor">Open security monitor</button></div>
+      </div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <div class="card-title"><h3>Task status</h3><button class="btn small" id="adminRequests2">View all</button></div>
+        ${statusBars(s)}
+      </div>
+      <div class="card">
+        <div class="card-title"><h3>Recent admin activity</h3><span class="small muted">Latest audit events</span></div>
+        ${logs.length ? `<div class="timeline">${logs.slice(0, 5).map(l => `
+          <div class="timeline-item"><div class="timeline-time">${fmt(l.created_at)}</div>
+            <div class="timeline-body"><strong>${esc(statusLabel(l.action))}</strong><p class="muted small">${esc(l.actor_name || 'System')} · ${esc(l.details || '')}</p></div>
+          </div>`).join('')}</div>` : empty('No audit events yet.')}
+      </div>
+    </div>`;
+
+  const go = page => { state.page = page; render(); };
+  $('#adminRequests').onclick = () => go('tasks');
+  $('#adminRequests2').onclick = () => go('tasks');
+  $('#adminMonitor').onclick = () => go('monitor');
+  c.querySelectorAll('[data-admin-page]').forEach(btn => {
+    btn.onclick = () => go(btn.dataset.adminPage);
+  });
 }

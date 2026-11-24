@@ -33,6 +33,19 @@
 .page-intro p { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); }
 .page-intro-actions { display: flex; gap: 9px; flex-wrap: wrap; }
 
+/* Section heading used to separate personal and administrator views. */
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 22px 0 12px;
+}
+.section-heading:first-child { margin-top: 0; }
+.section-heading h3 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+.section-heading p { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+
 /* Stats Card */
 .stat {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 55%), var(--bg-panel);
