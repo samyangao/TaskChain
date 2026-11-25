@@ -161,14 +161,17 @@ async function init() {
 
 function startSessionGuard() {
   if (window.__sessionGuard) return;
-  window.__sessionGuard = setInterval(async () => {
+  const check = async () => {
     try {
       const status = await api('/api/session/status');
       if (status.remainingSeconds <= 60 && status.remainingSeconds > 0) {
         toast(`Inactivity sign-out in ${status.remainingSeconds}s.`);
       }
+      const delay = Math.min(30000, Math.max(2000, Math.ceil(status.remainingSeconds * 500)));
+      window.__sessionGuard = setTimeout(check, delay);
     } catch (_) { /* api() redirects on 401 */ }
-  }, 30000);
+  };
+  check();
 }
 
 function nav() {

@@ -87,6 +87,13 @@ LOCKOUT_TIERS = (
 )
 OTP_EXPIRY_MINUTES = 3 + (SEED_D2 % 3)           # 3
 IDLE_TIMEOUT_MINUTES = 5 + (SEED_D1 % 5)         # 5
+# Demo/testing override only. Leave 0 or unset to keep the seeded 5-minute rule.
+try:
+    _idle_override = int(os.environ.get("IDLE_TIMEOUT_SECONDS", "0") or "0")
+except ValueError:
+    _idle_override = 0
+IDLE_TIMEOUT_SECONDS = _idle_override if _idle_override > 0 else 0
+IDLE_TIMEOUT_TOTAL_SECONDS = IDLE_TIMEOUT_SECONDS or (IDLE_TIMEOUT_MINUTES * 60)
 IP_BLOCK_THRESHOLD = 8 + SEED_D2                 # 11 failures ...
 IP_BLOCK_WINDOW_MINUTES = 10                     # ... in any 10 minutes
 IP_BLOCK_MINUTES = 10                            # block lasts 10 minutes

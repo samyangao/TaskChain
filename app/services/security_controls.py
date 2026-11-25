@@ -8,7 +8,7 @@ import bcrypt
 from flask import session
 
 from app.config import (
-    IDLE_TIMEOUT_MINUTES,
+    IDLE_TIMEOUT_TOTAL_SECONDS,
     IP_BLOCK_MINUTES,
     IP_BLOCK_THRESHOLD,
     IP_BLOCK_WINDOW_MINUTES,
@@ -214,7 +214,7 @@ def touch_session(update: bool = True) -> bool:
                 started = started.replace(tzinfo=now_utc().tzinfo)
         except (TypeError, ValueError):
             started = None
-        if started and now_utc() - started > timedelta(minutes=IDLE_TIMEOUT_MINUTES):
+        if started and now_utc() - started > timedelta(seconds=IDLE_TIMEOUT_TOTAL_SECONDS):
             session.clear()
             return False
     if update:
@@ -232,5 +232,5 @@ def session_remaining_seconds() -> int:
             started = started.replace(tzinfo=now_utc().tzinfo)
     except (TypeError, ValueError):
         return 0
-    remaining = IDLE_TIMEOUT_MINUTES * 60 - int((now_utc() - started).total_seconds())
+    remaining = IDLE_TIMEOUT_TOTAL_SECONDS - int((now_utc() - started).total_seconds())
     return max(0, remaining)
