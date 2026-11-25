@@ -473,6 +473,12 @@ input:focus-visible {
 .auth-switch a { color: var(--blue); font-weight: 700; text-decoration: none; }
 .auth-switch a:hover { text-decoration: underline; }
 
+/* Always-visible recovery entry on the sign-in form. The seeded
+   "Forgot Password? Reset Here" prompt still appears after two failures. */
+.auth-inline-link { text-align: right; margin-top: -2px; font-size: 12.5px; }
+.auth-inline-link a { color: var(--accent, #5be08a); font-weight: 700; text-decoration: none; }
+.auth-inline-link a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
 .auth-footer-note {
   display: flex;
   align-items: center;
