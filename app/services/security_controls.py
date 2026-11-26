@@ -44,6 +44,18 @@ def lockout_for(attempts: int):
     return 0, 0
 
 
+def remaining_attempts_before_lockout(attempts: int) -> int:
+    """How many more failures are allowed before the next lockout tier."""
+    attempts = max(0, int(attempts or 0))
+    for threshold, _seconds in LOCKOUT_TIERS:
+        if attempts < threshold:
+            return threshold - attempts
+    # After the last configured tier, the policy repeats every three failures.
+    last = LOCKOUT_TIERS[-1][0]
+    cycle = (attempts - last) % 3
+    return 3 - cycle if cycle else 0
+
+
 def apply_failed_login(cur, user, username_typed: str):
     """Record a failure, move to the right lockout tier, and alert the owner."""
     attempts = int(user["failed_login_attempts"] or 0) + 1

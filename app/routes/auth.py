@@ -30,6 +30,7 @@ from app.services.security_controls import (
     record_otp_failure,
     record_unknown_failure,
     remember_password,
+    remaining_attempts_before_lockout,
     session_remaining_seconds,
     touch_session,
 )
@@ -38,7 +39,7 @@ from app.utils import client_ip, ip_throttled, json_error, parse_uuid
 bp = Blueprint("auth", __name__)
 
 GENERIC_LOGIN_ERROR = "Invalid username or password."
-GENERIC_LOCKED_ERROR = "Too many failed attempts. Please wait before trying again."
+GENERIC_LOCKED_ERROR = "Account temporarily locked. Try again when the countdown ends."
 
 
 class _OtpThrottled(Exception):
@@ -352,7 +353,8 @@ def login():
         now = now_utc()
         if user["locked_until"] and user["locked_until"] > now:
             seconds = max(1, int((user["locked_until"] - now).total_seconds()))
-            return jsonify(error=GENERIC_LOCKED_ERROR, retryAfterSeconds=seconds, locked=True), 429
+            return jsonify(error=GENERIC_LOCKED_ERROR, retryAfterSeconds=seconds, locked=True,
+                           attempts=int(user["failed_login_attempts"] or 0), remainingAttempts=0), 429
 
         if not bcrypt.checkpw(password.encode(), user["password_hash"].encode()):
             attempts, tier, seconds = apply_failed_login(cur, user, identifier)
@@ -360,8 +362,11 @@ def login():
                         (user["email"], False, client_ip()))
             if seconds:
                 return jsonify(error=GENERIC_LOCKED_ERROR, retryAfterSeconds=seconds,
-                               locked=True, attempts=attempts), 429
-            return json_error(GENERIC_LOGIN_ERROR, 401)
+                               locked=True, attempts=attempts, remainingAttempts=0,
+                               lockoutTier=tier), 429
+            remaining = remaining_attempts_before_lockout(attempts)
+            message = f"Incorrect password. You have {remaining} attempt{'s' if remaining != 1 else ''} remaining."
+            return jsonify(error=message, attempts=attempts, remainingAttempts=remaining), 401
 
         if not user["is_verified"]:
             code, _id, expires_at, retry_after = issue_otp(cur, user["id"], "register")

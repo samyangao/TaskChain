@@ -44,7 +44,7 @@
     registerLink.style.opacity = '0.45';
     lockoutBox.hidden = false;
     const tick = () => {
-      lockoutBox.textContent = `Too many failed attempts. Try again in ${left}s.`;
+      lockoutBox.textContent = `Account temporarily locked. Try again in ${left}s.`;
       if (left <= 0) {
         clearInterval(lockTimer);
         submitBtn.disabled = false;
