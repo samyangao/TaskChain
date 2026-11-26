@@ -340,7 +340,7 @@
         const label = $(`#label-q${q.number}`);
         if (label) label.textContent = `${q.number}. ${q.question} *`;
       });
-      $('#username').placeholder = `${config.minUsername}–${config.maxUsername} letters and digits, starts with a letter`;
+      $('#username').placeholder = 'e.g., juandc2026';
     } catch (_) { /* defaults are seeded */ }
   }
 
