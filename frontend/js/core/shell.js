@@ -156,22 +156,45 @@ async function init() {
   initAccount();
   startNotifPolling();
   startSessionGuard();
+  startActivityHeartbeat();
   await render();
 }
 
 function startSessionGuard() {
   if (window.__sessionGuard) return;
+  let warned = false;
   const check = async () => {
     try {
       const status = await api('/api/session/status');
-      if (status.remainingSeconds <= 60 && status.remainingSeconds > 0) {
+      const warnAt = status.remainingSeconds <= 10 ? 5 : 60;
+      if (status.remainingSeconds > warnAt) warned = false;
+      if (status.remainingSeconds <= warnAt && status.remainingSeconds > 0 && !warned) {
         toast(`Inactivity sign-out in ${status.remainingSeconds}s.`);
+        warned = true;
       }
       const delay = Math.min(30000, Math.max(2000, Math.ceil(status.remainingSeconds * 500)));
       window.__sessionGuard = setTimeout(check, delay);
     } catch (_) { /* api() redirects on 401 */ }
   };
   check();
+}
+
+function startActivityHeartbeat() {
+  if (window.__activityHeartbeat) return;
+  window.__activityHeartbeat = true;
+  let lastPing = 0;
+  const ping = () => {
+    const now = Date.now();
+    if (now - lastPing < 2000) return;
+    lastPing = now;
+    api('/api/session/touch', { method: 'POST', body: '{}' }).catch(() => {});
+  };
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(event => {
+    document.addEventListener(event, ping, { passive: true });
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) ping();
+  });
 }
 
 function nav() {

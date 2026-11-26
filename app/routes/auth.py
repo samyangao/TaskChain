@@ -31,6 +31,7 @@ from app.services.security_controls import (
     record_unknown_failure,
     remember_password,
     session_remaining_seconds,
+    touch_session,
 )
 from app.utils import client_ip, ip_throttled, json_error, parse_uuid
 
@@ -501,6 +502,14 @@ def session_status(user):
     remaining = session_remaining_seconds()
     return jsonify(remainingSeconds=remaining, idleMinutes=remaining // 60,
                    warning=remaining <= 60)
+
+
+@bp.post("/api/session/touch")
+@login_required
+def session_touch(user):
+    """Record real user activity without keeping background polling alive."""
+    touch_session()
+    return jsonify(remainingSeconds=session_remaining_seconds())
 
 
 @bp.get("/api/me")
