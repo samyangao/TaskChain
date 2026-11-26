@@ -82,7 +82,7 @@ function changePasswordModal() {
           <li data-password-rule="upper"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">At least one uppercase letter (A–Z)</span></li>
           <li data-password-rule="lower"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">At least one lowercase letter (a–z)</span></li>
           <li data-password-rule="number"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">At least one number (0–9)</span></li>
-          <li data-password-rule="special"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">At least one special character (e.g., @, #, $, !, %)</span></li>
+          <li data-password-rule="special"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">One special character (!@#$...)</span></li>
         </ul>
       </div>
       <div class="form-field full-span"><label for="cpConfirm">Confirm new password</label><input class="input" id="cpConfirm" type="password" autocomplete="new-password"></div>
