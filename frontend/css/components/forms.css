@@ -78,11 +78,24 @@
 .strength span { display: block; height: 100%; width: 33%; border-radius: inherit; transition: width 0.2s ease, background 0.2s ease; background: var(--status-red-ink); }
 .strength span.medium { background: var(--status-amber-ink); }
 .strength span.strong { background: var(--status-green-ink); }
-.pw-rules { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; }
-.pw-rules li { display: flex; align-items: flex-start; gap: 7px; font-size: 11.5px; line-height: 1.35; color: var(--ink-faint); }
-.pw-rule-icon { display: inline-grid; place-items: center; flex: 0 0 14px; width: 14px; height: 14px; margin-top: 1px; border-radius: 50%; font-size: 9px; font-weight: 800; background: var(--status-red-bg); color: var(--status-red-ink); }
-.pw-rules li.is-met .pw-rule-icon { background: var(--status-green-bg); color: var(--status-green-ink); }
-.pw-rules li.is-met .pw-rule-text { color: var(--ink-soft); }
+.pw-rules { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.pw-rules li { display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 1.45; color: var(--ink-faint); }
+.pw-rule-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--bg-active);
+  color: var(--ink-faint);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.pw-rules li.is-met .pw-rule-icon { background: var(--status-green-ink); color: #04160b; box-shadow: 0 0 0 3px var(--status-green-bg); }
+.pw-rules li.is-met .pw-rule-text { color: var(--ink); }
+.pw-rules li.is-missing .pw-rule-text { color: var(--ink-faint); }
 
 /* Optional grouped form sections */
 .form-section {
