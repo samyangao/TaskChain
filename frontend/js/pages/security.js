@@ -74,10 +74,32 @@ function changePasswordModal() {
     <div class="modal-head"><div><div class="eyebrow">Account security</div><h2>Change password</h2></div><button class="modal-close" aria-label="Close">×</button></div>
     <div class="form-grid">
       <div class="form-field full-span"><label for="cpCurrent">Current password</label><input class="input" id="cpCurrent" type="password" autocomplete="current-password"></div>
-      <div class="form-field"><label for="cpNew">New password</label><input class="input" id="cpNew" type="password" autocomplete="new-password"></div>
-      <div class="form-field"><label for="cpConfirm">Confirm new password</label><input class="input" id="cpConfirm" type="password" autocomplete="new-password"></div>
+      <div class="form-field full-span"><label for="cpNew">New password</label><input class="input" id="cpNew" type="password" autocomplete="new-password">
+        <div class="strength"><span id="cpStrengthBar"></span></div>
+        <div class="hint" id="cpStrengthText">Weak</div>
+        <ul class="pw-rules" id="cpPasswordRules" aria-label="Password requirements" aria-live="polite">
+          <li data-password-rule="length"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">At least <span data-password-min>11</span> characters</span></li>
+          <li data-password-rule="upper"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">At least one uppercase letter (A–Z)</span></li>
+          <li data-password-rule="lower"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">At least one lowercase letter (a–z)</span></li>
+          <li data-password-rule="number"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">At least one number (0–9)</span></li>
+          <li data-password-rule="special"><span class="pw-rule-icon" aria-hidden="true">✕</span><span class="pw-rule-text">At least one special character (e.g., @, #, $, !, %)</span></li>
+        </ul>
+      </div>
+      <div class="form-field full-span"><label for="cpConfirm">Confirm new password</label><input class="input" id="cpConfirm" type="password" autocomplete="new-password"></div>
       <div class="form-actions full-span"><button class="btn" id="cpCancel">Cancel</button><button class="btn primary" id="cpSave">Change password</button></div>
     </div>`);
+  const cpNew = m.querySelector('#cpNew');
+  const updateCpStrength = () => {
+    const value = cpNew.value;
+    const level = passwordStrengthLevel(value, 11);
+    const bar = m.querySelector('#cpStrengthBar');
+    bar.className = level.toLowerCase();
+    bar.style.width = level === 'Weak' ? '33%' : level === 'Medium' ? '66%' : '100%';
+    m.querySelector('#cpStrengthText').textContent = level;
+    updatePasswordChecklist(m.querySelector('#cpPasswordRules'), value, 11);
+  };
+  cpNew.addEventListener('input', updateCpStrength);
+  updateCpStrength();
   m.querySelector('#cpCancel').onclick = () => m.remove();
   m.querySelector('#cpSave').onclick = async () => {
     const currentPassword = m.querySelector('#cpCurrent').value;
@@ -85,6 +107,7 @@ function changePasswordModal() {
     const confirmPassword = m.querySelector('#cpConfirm').value;
     if (!currentPassword || !newPassword) return toast('Enter your current and new password.');
     if (newPassword !== confirmPassword) return toast('The new passwords do not match.');
+    if (passwordStrengthLevel(newPassword, 11) === 'Weak') return toast('Password is too weak. Use uppercase, lowercase, numbers or symbols.');
     const btn = m.querySelector('#cpSave'); btn.disabled = true;
     try {
       const r = await api('/api/security/password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword, confirmPassword }) });

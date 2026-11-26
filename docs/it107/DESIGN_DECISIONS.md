@@ -8,7 +8,7 @@ I use **bcrypt with cost 12** (`bcrypt.hashpw(..., bcrypt.gensalt(rounds=12))`).
 
 ## 2. What makes a password strong (§4.9)
 
-The strength meter and the server use the same rule: count the character classes present (lowercase, uppercase, digit, symbol). A password is **Weak** when it is shorter than the seeded 11 characters or uses at most one class; **Medium** when it meets the length and uses two classes; **Strong** when it meets the length and uses three or more. Weak is rejected by both the browser and the server. This is a deliberate simplification of zxcvbn: it is explainable during the demo and it enforces length plus variety, which are the two properties that matter most for resisting guessing. A long passphrase with three classes is accepted even if it has no symbol, because length dominates.
+The strength meter and the server use the same rule: count the character classes present (lowercase, uppercase, digit, symbol). A password is **Weak** when it is shorter than the seeded 11 characters or uses at most one class; **Medium** when it meets the length and uses two or three classes; **Strong** when it meets the length and uses all four. Weak is rejected by both the browser and the server. This is a deliberate simplification of zxcvbn: it is explainable during the demo and it enforces length plus variety, which are the two properties that matter most for resisting guessing. A long passphrase with three classes is accepted as Medium even if it has no symbol, because length dominates.
 
 ## 3. Why hash a security answer (§5)
 

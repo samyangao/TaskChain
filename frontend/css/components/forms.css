@@ -73,6 +73,17 @@
 }
 .form-error { margin: 0 0 14px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--status-red-bg); border: 1px solid var(--status-red-border); }
 
+/* Live password requirements (in-app change-password modal). */
+.strength { height: 6px; border-radius: var(--radius-full); background: var(--bg-active); overflow: hidden; }
+.strength span { display: block; height: 100%; width: 33%; border-radius: inherit; transition: width 0.2s ease, background 0.2s ease; background: var(--status-red-ink); }
+.strength span.medium { background: var(--status-amber-ink); }
+.strength span.strong { background: var(--status-green-ink); }
+.pw-rules { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; }
+.pw-rules li { display: flex; align-items: flex-start; gap: 7px; font-size: 11.5px; line-height: 1.35; color: var(--ink-faint); }
+.pw-rule-icon { display: inline-grid; place-items: center; flex: 0 0 14px; width: 14px; height: 14px; margin-top: 1px; border-radius: 50%; font-size: 9px; font-weight: 800; background: var(--status-red-bg); color: var(--status-red-ink); }
+.pw-rules li.is-met .pw-rule-icon { background: var(--status-green-bg); color: var(--status-green-ink); }
+.pw-rules li.is-met .pw-rule-text { color: var(--ink-soft); }
+
 /* Optional grouped form sections */
 .form-section {
   grid-column: 1 / -1;

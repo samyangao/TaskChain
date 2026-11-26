@@ -599,6 +599,13 @@ input:focus-visible {
 .strength span { display: block; height: 100%; width: 33%; border-radius: inherit; transition: width 0.2s ease, background 0.2s ease; background: #ef4444; }
 .strength span.medium { background: #f59e0b; }
 .strength span.strong { background: #22c55e; }
+
+/* Live password requirements */
+.pw-rules { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; }
+.pw-rules li { display: flex; align-items: flex-start; gap: 7px; font-size: 11.5px; line-height: 1.35; color: var(--muted, #9da8a1); }
+.pw-rule-icon { display: inline-grid; place-items: center; flex: 0 0 14px; width: 14px; height: 14px; margin-top: 1px; border-radius: 50%; font-size: 9px; font-weight: 800; background: rgba(248,113,113,.12); color: #fca5a5; }
+.pw-rules li.is-met .pw-rule-icon { background: rgba(34,197,94,.14); color: #86efac; }
+.pw-rules li.is-met .pw-rule-text { color: var(--ink-soft, #c8d6cc); }
 .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .lockout { margin: 10px 0 0; text-align: center; color: #fca5a5; font-size: 13px; }
 .privacy-wrap { min-height: 100vh; display: grid; place-items: center; padding: 32px 18px; background: #0b120e; }

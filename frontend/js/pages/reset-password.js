@@ -11,13 +11,15 @@
   function strength(password) {
     const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((r) => r.test(password)).length;
     if (password.length < minPassword || classes <= 1) return 'Weak';
-    return classes === 2 ? 'Medium' : 'Strong';
+    return classes < 4 ? 'Medium' : 'Strong';
   }
   function updateStrength() {
-    const level = strength($('#password').value);
+    const value = $('#password').value;
+    const level = strength(value);
     $('#strengthBar').className = level.toLowerCase();
     $('#strengthBar').style.width = level === 'Weak' ? '33%' : level === 'Medium' ? '66%' : '100%';
     $('#strengthText').textContent = level;
+    updatePasswordChecklist($('#passwordRules'), value, minPassword);
   }
 
   async function loadConfig() {

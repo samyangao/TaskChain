@@ -117,7 +117,7 @@
   function strength(password) {
     const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((r) => r.test(password)).length;
     if (password.length < config.minPassword || classes <= 1) return 'Weak';
-    return classes === 2 ? 'Medium' : 'Strong';
+    return classes < 4 ? 'Medium' : 'Strong';
   }
 
   function validateUsername(value) {
@@ -307,6 +307,7 @@
     bar.className = level.toLowerCase();
     bar.style.width = level === 'Weak' ? '33%' : level === 'Medium' ? '66%' : '100%';
     $('#strengthText').textContent = level;
+    updatePasswordChecklist($('#passwordRules'), value, config.minPassword || 11);
   }
 
   // Live username availability

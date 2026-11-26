@@ -173,7 +173,7 @@ def password_strength(password):
     )
     if len(password) < MIN_PASSWORD_LENGTH or classes <= 1:
         return "Weak"
-    if classes == 2:
+    if classes < 4:
         return "Medium"
     return "Strong"
 
